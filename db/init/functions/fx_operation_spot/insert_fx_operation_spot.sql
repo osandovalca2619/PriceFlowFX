@@ -1,0 +1,38 @@
+-- Inserta un registro en la tabla fx_operation_spot
+CREATE OR REPLACE FUNCTION insert_fx_operation_spot(
+    p_client_id INTEGER,
+    p_user_id INTEGER,
+    p_amount_currency1 NUMERIC(18,2),
+    p_amount_currency2 NUMERIC(18,2),
+    p_cost_price NUMERIC(18,6),
+    p_margin NUMERIC(8,4),
+    p_client_price NUMERIC(18,6),
+    p_start_date DATE,
+    p_register_date TIMESTAMP,
+    p_value_date DATE,
+    p_payment_method_currency1 VARCHAR(30),
+    p_payment_method_currency2 VARCHAR(30),
+    p_operation_side VARCHAR(10),
+    p_base_currency_id INTEGER,
+    p_quote_currency_id INTEGER,
+    p_origin_id INTEGER,
+    p_segment_id INTEGER,
+    p_destination_system_id INTEGER,
+    p_source_system_id INTEGER,
+    p_comments TEXT,
+    p_trading_folder_id INTEGER,
+    p_sales_folder_id INTEGER,
+    p_status_id INTEGER,
+    p_created_by INTEGER
+) RETURNS fx_operation_spot AS $$
+DECLARE
+    new_fx_operation_spot fx_operation_spot;
+BEGIN
+    INSERT INTO fx_operation_spot (
+        client_id, user_id, amount_currency1, amount_currency2, cost_price, margin, client_price, start_date, register_date, value_date, payment_method_currency1, payment_method_currency2, operation_side, base_currency_id, quote_currency_id, origin_id, segment_id, destination_system_id, source_system_id, comments, trading_folder_id, sales_folder_id, status_id, created_by
+    ) VALUES (
+        p_client_id, p_user_id, p_amount_currency1, p_amount_currency2, p_cost_price, p_margin, p_client_price, p_start_date, p_register_date, p_value_date, p_payment_method_currency1, p_payment_method_currency2, p_operation_side, p_base_currency_id, p_quote_currency_id, p_origin_id, p_segment_id, p_destination_system_id, p_source_system_id, p_comments, p_trading_folder_id, p_sales_folder_id, p_status_id, p_created_by
+    ) RETURNING * INTO new_fx_operation_spot;
+    RETURN new_fx_operation_spot;
+END;
+$$ LANGUAGE plpgsql;

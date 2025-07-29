@@ -1,0 +1,19 @@
+<server description="Servidor WAS con Db2">
+  <featureManager>
+    <feature>servlet-4.0</feature>
+    <feature>jdbc-4.2</feature>
+  </featureManager>
+
+  <dataSource id="Db2DS" jndiName="jdbc/db2ds">
+    <jdbcDriver libraryRef="Db2Lib"/>
+    <properties.db2.jcc databaseName="db_blotter"
+                        serverName="db2"
+                        portNumber="50000"
+                        user="db2inst1"
+                        password="db2inst1"/>
+  </dataSource>
+
+  <library id="Db2Lib">
+    <fileset dir="/config/db2jcc" includes="jcc-12.1.2.0.jar"/>
+  </library>
+</server>
