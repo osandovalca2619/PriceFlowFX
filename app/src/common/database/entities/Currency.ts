@@ -1,49 +1,46 @@
 import {
-  Column,
   Entity,
-  Index,
-  OneToMany,
   PrimaryGeneratedColumn,
-} from "typeorm";
-import { FxPrice } from "./FxPrice";
-import { SalesSpread } from "./SalesSpread";
-import { TradingSpreadRange } from "./TradingSpreadRange";
+  Column,
+  CreateDateColumn,
+  UpdateDateColumn,
+} from 'typeorm';
 
-@Index("currency_code_key", ["code"], { unique: true })
-@Index("currency_pkey", ["id"], { unique: true })
-@Entity("currency", { schema: "public" })
+@Entity('currency')
 export class Currency {
-  @PrimaryGeneratedColumn({ type: "integer", name: "id" })
+  @PrimaryGeneratedColumn()
   id: number;
 
-  @Column("character varying", { name: "code", unique: true, length: 3 })
+  @Column({ type: 'varchar', length: 3, unique: true })
   code: string;
 
-  @Column("character varying", { name: "name", length: 50 })
+  @Column({ type: 'varchar', length: 50 })
   name: string;
 
-  @Column("boolean", { name: "is_strong_currency" })
-  isStrongCurrency: boolean;
+  @Column({ type: 'varchar', length: 5, nullable: true })
+  symbol: string;
 
-  @Column("timestamp without time zone", {
-    name: "created_at",
-    nullable: true,
-    default: () => "now()",
-  })
-  createdAt: Date | null;
+  @Column({ type: 'varchar', length: 50, nullable: true })
+  country: string;
 
-  @OneToMany(() => FxPrice, (fxPrice) => fxPrice.currency)
-  fxPrices: FxPrice[];
+  @Column({ type: 'integer', default: 2 })
+  decimals: number;
 
-  @OneToMany(() => SalesSpread, (salesSpread) => salesSpread.baseCurrency)
-  salesSpreads: SalesSpread[];
+  @Column({ type: 'boolean' })
+  is_strong_currency: boolean;
 
-  @OneToMany(() => SalesSpread, (salesSpread) => salesSpread.quoteCurrency)
-  salesSpreads2: SalesSpread[];
+  @Column()
+  created_by: number;
 
-  @OneToMany(
-    () => TradingSpreadRange,
-    (tradingSpreadRange) => tradingSpreadRange.currency
-  )
-  tradingSpreadRanges: TradingSpreadRange[];
+  @CreateDateColumn({ type: 'timestamp' })
+  created_at: Date;
+
+  @Column({ nullable: true })
+  modified_by: number;
+
+  @UpdateDateColumn({ type: 'timestamp', nullable: true })
+  modified_at: Date;
+
+  @Column({ type: 'varchar', length: 20, default: 'activo' })
+  status: string;
 }
