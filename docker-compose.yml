@@ -1,19 +1,4 @@
 services:
-  # db2:
-  #   image: icr.io/db2/db2-community:latest
-  #   container_name: db2_blotter
-  #   environment:
-  #     LICENSE: accept
-  #     DB2INST1_PASSWORD: Blotter2025
-  #     DBNAME: db_blotter
-  #     ARCHIVE_LOGS: "false"
-  #     ENABLE_ORACLE_COMPATIBILITY: "false"
-  #   ports:
-  #     - "61000:50000"
-  #   volumes:
-  #     - db2_data:/database
-  #   restart: unless-stopped
-
   api:
     build: ./app
     container_name: nestjs_api
@@ -22,35 +7,33 @@ services:
     ports:
       - "3000:3000"
     env_file:
-      - ./app/.env
+      - ./.env
     restart: unless-stopped
 
   postgres:
-    image: postgres:16
-    container_name: postgres_blotter
+    image: postgres:14
+    container_name: postgres_priceflowfx
     environment:
-      POSTGRES_USER: blotter
-      POSTGRES_PASSWORD: Blotter2025
-      POSTGRES_DB: db_blotter
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
     ports:
-      - "5432:5432"
+      - "${DB_PORT}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./db/init/:/docker-entrypoint-initdb.d/
     restart: unless-stopped
 
-  was:
-    build: ./was-liberty
-    container_name: liberty_server
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: pgadmin_priceflowfx
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - "5050:80"
     depends_on:
       - postgres
-    ports:
-      - "9080:9080"
-    volumes:
-      - was_config:/config
     restart: unless-stopped
 
 volumes:
-  # db2_data:
   postgres_data:
-  was_config:
