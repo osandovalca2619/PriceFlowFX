@@ -24,6 +24,7 @@ let User = class User {
     modifiedBy;
     modifiedAt;
     password;
+    transactions;
 };
 exports.User = User;
 __decorate([
@@ -117,7 +118,12 @@ __decorate([
     (0, typeorm_1.Column)({ type: 'varchar', length: 255, select: false, nullable: true }),
     __metadata("design:type", String)
 ], User.prototype, "password", void 0);
+__decorate([
+    (0, typeorm_1.OneToMany)(() => transaction_entity_1.Transaction, (transaction) => transaction.user),
+    __metadata("design:type", Array)
+], User.prototype, "transactions", void 0);
 exports.User = User = __decorate([
     (0, typeorm_1.Entity)('app_user')
 ], User);
+const transaction_entity_1 = require("../../transactions/entities/transaction.entity");
 //# sourceMappingURL=user.entity.js.map

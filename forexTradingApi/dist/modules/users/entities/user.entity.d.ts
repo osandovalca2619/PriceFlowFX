@@ -10,4 +10,6 @@ export declare class User {
     modifiedBy: number | null;
     modifiedAt: Date | null;
     password?: string;
+    transactions: Transaction[];
 }
+import { Transaction } from '../../transactions/entities/transaction.entity';

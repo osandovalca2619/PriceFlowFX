@@ -1,4 +1,4 @@
-import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, ManyToOne, JoinColumn } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, ManyToOne, JoinColumn, OneToMany } from 'typeorm';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 @Entity('app_user')
@@ -84,6 +84,10 @@ export class User {
   @Column({ type: 'varchar', length: 255, select: false, nullable: true })
   password?: string;
 
+  // Relación con transacciones
+  @OneToMany(() => Transaction, (transaction) => transaction.user)
+  transactions: Transaction[];
+
   // Relaciones (opcional, puedes definirlas más tarde)
   // @ManyToOne(() => UserProfile)
   // @JoinColumn({ name: 'profile_id' })
@@ -101,3 +105,6 @@ export class User {
   // @JoinColumn({ name: 'modified_by' })
   // modifier: User;
 }
+
+// Import circular para evitar problemas de dependencias
+import { Transaction } from '../../transactions/entities/transaction.entity';
