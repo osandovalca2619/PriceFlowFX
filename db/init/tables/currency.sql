@@ -11,8 +11,8 @@ CREATE TABLE currency (
     modified_by INTEGER,
     modified_at TIMESTAMP,
     status VARCHAR(20) NOT NULL DEFAULT 'activo'
-,    FOREIGN KEY (created_by) REFERENCES users(id),
-    FOREIGN KEY (modified_by) REFERENCES users(id)
+,    FOREIGN KEY (created_by) REFERENCES app_user(id),
+    FOREIGN KEY (modified_by) REFERENCES app_user(id)
 );
 
 CREATE INDEX idx_currency_name ON currency(name);
