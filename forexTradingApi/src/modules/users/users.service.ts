@@ -4,13 +4,14 @@ import { Repository } from 'typeorm';
 import { User } from './entities/user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-import * as bcrypt from 'bcrypt';
+import { HashService } from '../common/services/hash.service';
 
 @Injectable()
 export class UsersService {
   constructor(
     @InjectRepository(User)
     private usersRepository: Repository<User>,
+    private hashService: HashService, // Inyectar HashService
   ) {}
 
   async create(createUserDto: CreateUserDto): Promise<User> {
@@ -22,10 +23,9 @@ export class UsersService {
 
     let hashedPassword: string | undefined;
     
-    // Hash the password if provided (for Opción 1)
+    // Hash the password if provided
     if (createUserDto.password) {
-      const saltRounds = 10;
-      hashedPassword = await bcrypt.hash(createUserDto.password, saltRounds);
+      hashedPassword = await this.hashService.hashPassword(createUserDto.password);
     }
 
     const user = this.usersRepository.create({
@@ -39,14 +39,16 @@ export class UsersService {
 
   async findAll(): Promise<User[]> {
     return this.usersRepository.find({
-      select: ['id', 'username', 'fullName', 'profileId', 'salesGroupId', 'status', 'createdAt', 'modifiedAt']
+      select: ['id', 'username', 'fullName', 'profileId', 'salesGroupId', 'status', 'createdAt', 'modifiedAt'],
+      // ✅ REMOVIDO: relations: ['profile', 'salesGroup'] - No existen estas relaciones
     });
   }
 
   async findOne(id: number): Promise<User> {
     const user = await this.usersRepository.findOne({ 
       where: { id },
-      select: ['id', 'username', 'fullName', 'profileId', 'salesGroupId', 'status', 'createdBy', 'createdAt', 'modifiedBy', 'modifiedAt']
+      select: ['id', 'username', 'fullName', 'profileId', 'salesGroupId', 'status', 'createdBy', 'createdAt', 'modifiedBy', 'modifiedAt'],
+      // ✅ REMOVIDO: relations: ['profile', 'salesGroup'] - No existen estas relaciones
     });
     
     if (!user) {
@@ -57,34 +59,45 @@ export class UsersService {
   }
 
   async findByUsername(username: string): Promise<User | null> {
-    return this.usersRepository.findOne({ where: { username } });
+    return this.usersRepository.findOne({ 
+      where: { username },
+      select: ['id', 'username', 'fullName', 'profileId', 'salesGroupId', 'status', 'createdAt', 'modifiedAt'],
+    });
   }
 
   async findByUsernameWithPassword(username: string): Promise<User | null> {
     return this.usersRepository.findOne({ 
       where: { username },
-      select: ['id', 'username', 'fullName', 'profileId', 'salesGroupId', 'status', 'password', 'createdAt', 'modifiedAt']
+      select: ['id', 'username', 'fullName', 'profileId', 'salesGroupId', 'status', 'password', 'createdAt', 'modifiedAt'],
+    });
+  }
+
+  // ✅ MÉTODO FALTANTE - Agregado aquí
+  async findByIdWithPassword(id: number): Promise<User | null> {
+    return this.usersRepository.findOne({ 
+      where: { id },
+      select: ['id', 'username', 'fullName', 'profileId', 'salesGroupId', 'status', 'password', 'createdAt', 'modifiedAt'],
     });
   }
 
   async findActiveUsers(): Promise<User[]> {
     return this.usersRepository.find({
       where: { status: 'activo' },
-      select: ['id', 'username', 'fullName', 'profileId', 'salesGroupId', 'status', 'createdAt']
+      select: ['id', 'username', 'fullName', 'profileId', 'salesGroupId', 'status', 'createdAt'],
     });
   }
 
   async findByProfileId(profileId: number): Promise<User[]> {
     return this.usersRepository.find({
       where: { profileId },
-      select: ['id', 'username', 'fullName', 'status', 'createdAt']
+      select: ['id', 'username', 'fullName', 'status', 'createdAt'],
     });
   }
 
   async findBySalesGroupId(salesGroupId: number): Promise<User[]> {
     return this.usersRepository.find({
       where: { salesGroupId },
-      select: ['id', 'username', 'fullName', 'status', 'createdAt']
+      select: ['id', 'username', 'fullName', 'status', 'createdAt'],
     });
   }
 
@@ -93,8 +106,7 @@ export class UsersService {
     
     // If password is being updated, hash it
     if (updateUserDto.password) {
-      const saltRounds = 10;
-      updateUserDto.password = await bcrypt.hash(updateUserDto.password, saltRounds);
+      updateUserDto.password = await this.hashService.hashPassword(updateUserDto.password);
     }
 
     // Check if username is being changed to one that already exists
@@ -112,6 +124,17 @@ export class UsersService {
     });
     
     return this.findOne(id);
+  }
+
+  // ✅ MÉTODO NUEVO - Para cambio de contraseña específico
+  async updatePassword(id: number, newPassword: string, modifiedBy: number): Promise<void> {
+    const hashedPassword = await this.hashService.hashPassword(newPassword);
+    
+    await this.usersRepository.update(id, {
+      password: hashedPassword,
+      modifiedBy,
+      modifiedAt: new Date(),
+    });
   }
 
   async deactivateUser(id: number, modifiedBy: number): Promise<User> {
@@ -139,7 +162,8 @@ export class UsersService {
     await this.usersRepository.remove(user);
   }
 
+  // ✅ MÉTODO DEPRECATED - Mantener por compatibilidad, pero usar HashService
   async validatePassword(plainTextPassword: string, hashedPassword: string): Promise<boolean> {
-    return bcrypt.compare(plainTextPassword, hashedPassword);
+    return this.hashService.comparePassword(plainTextPassword, hashedPassword);
   }
 }

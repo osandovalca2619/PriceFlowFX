@@ -8,6 +8,6 @@ export declare class JwtStrategy extends JwtStrategy_base {
     private authService;
     private configService;
     constructor(authService: AuthService, configService: ConfigService);
-    validate(payload: any): Promise<any>;
+    validate(payload: any): Promise<import("../auth.service").AuthUser>;
 }
 export {};

@@ -1,13 +1,22 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { User } from './entities/user.entity';
 import { UsersService } from './users.service';
 import { UsersController } from './users.controller';
+import { User } from './entities/user.entity';
+import { HashService } from '../common/services/hash.service';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([User])],
-  providers: [UsersService],
+  imports: [
+    TypeOrmModule.forFeature([User]),
+  ],
   controllers: [UsersController],
-  exports: [UsersService],
+  providers: [
+    UsersService,
+    HashService, // ✅ Agregar HashService como provider
+  ],
+  exports: [
+    UsersService,
+    TypeOrmModule, // Para que otros módulos puedan usar User repository
+  ],
 })
 export class UsersModule {}

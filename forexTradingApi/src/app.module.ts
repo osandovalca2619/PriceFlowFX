@@ -1,28 +1,99 @@
 import { Module } from '@nestjs/common';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { ConfigModule } from '@nestjs/config';
-import { typeOrmConfig } from './config/typeorm.config';
+import { APP_GUARD } from '@nestjs/core';
+import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
+
+// Modules
+import { CommonModule } from './modules/common/common.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { UsersModule } from './modules/users/users.module';
 import { ProductsModule } from './modules/products/products.module';
 import { TransactionsModule } from './modules/transactions/transactions.module';
-import { CurrenciesModule } from './modules/currencies/currencies.module';
+
+// Database Configuration
+import { getDatabaseConfig } from './config/database.config';
 
 @Module({
   imports: [
+    // Configuración global
     ConfigModule.forRoot({
       isGlobal: true,
+      envFilePath: '.env',
+      validationOptions: {
+        allowUnknown: true,
+        abortEarly: true,
+      },
     }),
-    TypeOrmModule.forRoot(typeOrmConfig),
+
+    // Rate Limiting (protección contra ataques de fuerza bruta)
+    ThrottlerModule.forRoot([
+      {
+        name: 'short',
+        ttl: 1000, // 1 segundo
+        limit: 3,  // 3 requests por segundo
+      },
+      {
+        name: 'medium',
+        ttl: 10000, // 10 segundos
+        limit: 20,  // 20 requests por 10 segundos
+      },
+      {
+        name: 'long',
+        ttl: 60000, // 1 minuto
+        limit: 100, // 100 requests por minuto
+      },
+    ]),
+
+    // Base de datos
+    TypeOrmModule.forRootAsync({
+      imports: [ConfigModule],
+      useFactory: getDatabaseConfig,
+      inject: [ConfigService],
+    }),
+
+    // Módulos de la aplicación
+    CommonModule,        // ✅ Agregado - Servicios comunes (HashService)
     AuthModule,
     UsersModule,
     ProductsModule,
     TransactionsModule,
-    CurrenciesModule,
   ],
-  controllers: [AppController],
-  providers: [AppService],
+  
+  providers: [
+    // Rate limiting global
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
+    },
+  ],
 })
-export class AppModule {}
+export class AppModule {
+  constructor(private configService: ConfigService) {
+    // Validar variables de entorno críticas al inicio
+    this.validateEnvironment();
+  }
+
+  private validateEnvironment() {
+    const requiredEnvVars = [
+      'SUPABASE_DB_PASSWORD',
+      'JWT_SECRET',
+    ];
+
+    const missingVars = requiredEnvVars.filter(
+      (varName) => !this.configService.get(varName),
+    );
+
+    if (missingVars.length > 0) {
+      throw new Error(
+        `Missing required environment variables: ${missingVars.join(', ')}`,
+      );
+    }
+
+    // Validar que JWT_SECRET sea suficientemente fuerte
+    const jwtSecret = this.configService.get<string>('JWT_SECRET');
+    if (jwtSecret && jwtSecret.length < 32) {
+      throw new Error('JWT_SECRET must be at least 32 characters long');
+    }
+  }
+}

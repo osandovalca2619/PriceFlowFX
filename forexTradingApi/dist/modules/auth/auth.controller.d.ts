@@ -13,25 +13,8 @@ interface AuthenticatedRequest extends Request {
 export declare class AuthController {
     private authService;
     constructor(authService: AuthService);
-    login(loginDto: LoginDto): Promise<{
-        access_token: string;
-        user: {
-            id: any;
-            username: any;
-            fullName: any;
-            profileId: any;
-            salesGroupId: any;
-            status: any;
-        };
-    }>;
-    getProfile(req: AuthenticatedRequest): Promise<{
-        id: number;
-        username: string;
-        fullName: string;
-        profileId: number;
-        salesGroupId: number | null;
-        status: "activo" | "inactivo";
-    }>;
+    login(loginDto: LoginDto): Promise<import("./auth.service").LoginResponse>;
+    getProfile(req: AuthenticatedRequest): Promise<import("./auth.service").AuthUser>;
     validateToken(req: AuthenticatedRequest): Promise<{
         valid: boolean;
         user: {
