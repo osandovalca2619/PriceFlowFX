@@ -42,6 +42,8 @@ CREATE TABLE fx_operation_forward (
     forward_margin NUMERIC(8,4),                           -- Margen forward
     client_price_spot NUMERIC(18,6),                       -- Precio cliente spot
     client_price_forward NUMERIC(18,6),                    -- Precio cliente forward
+    pnl_calculated NUMERIC(18,2),                        -- PnL calculado
+    workflow_step VARCHAR(30), 
     created_by INTEGER NOT NULL REFERENCES app_user(id) ON DELETE RESTRICT,
     created_at TIMESTAMP DEFAULT NOW(),
     modified_by INTEGER REFERENCES app_user(id) ON DELETE RESTRICT,

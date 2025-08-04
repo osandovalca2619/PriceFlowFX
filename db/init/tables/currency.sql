@@ -10,8 +10,8 @@ CREATE TABLE currency (
     created_at TIMESTAMP DEFAULT NOW(),
     modified_by INTEGER,
     modified_at TIMESTAMP,
-    status VARCHAR(20) NOT NULL DEFAULT 'activo'
-,    FOREIGN KEY (created_by) REFERENCES app_user(id),
+    status VARCHAR(20) NOT NULL DEFAULT 'activo',    
+    FOREIGN KEY (created_by) REFERENCES app_user(id),
     FOREIGN KEY (modified_by) REFERENCES app_user(id)
 );
 
@@ -26,7 +26,7 @@ CREATE TABLE currency_audit (
     changed_by INTEGER NOT NULL,
     changed_at TIMESTAMP DEFAULT NOW(),
     FOREIGN KEY (currency_id) REFERENCES currency(id),
-    FOREIGN KEY (changed_by) REFERENCES users(id)
+    FOREIGN KEY (changed_by) REFERENCES app_user(id)
 );
 
 -- Función para auditar cambios en currency

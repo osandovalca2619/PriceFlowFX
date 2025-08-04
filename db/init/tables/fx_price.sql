@@ -2,8 +2,8 @@
 -- Almacena los precios BID, MID y OFFER por moneda y producto FX en una fecha determinada
 CREATE TABLE fx_price (
     id SERIAL PRIMARY KEY,
-    currency_id INTEGER NOT NULL REFERENCES currency(id) ON DELETE RESTRICT ON UPDATE CASCADE,
-    fx_product_id INTEGER NOT NULL REFERENCES fx_product(id) ON DELETE RESTRICT ON UPDATE CASCADE,
+    base_currency_id INTEGER NOT NULL REFERENCES currency(id),
+    quote_currency_id INTEGER NOT NULL REFERENCES currency(id),
     price_date DATE NOT NULL,
     price_bid NUMERIC(18,6),         -- Precio BID
     price_mid NUMERIC(18,6),         -- Precio MID
@@ -11,6 +11,7 @@ CREATE TABLE fx_price (
     info_source VARCHAR(50),         -- Origen de la información (ej: Bloomberg, Datatec)
     created_at TIMESTAMP DEFAULT NOW(),
     updated_at TIMESTAMP             -- Fecha/hora de última actualización
+    UNIQUE(base_currency_id, quote_currency_id, info_source)
 );
 
 CREATE INDEX idx_fx_price_currency_id ON fx_price(currency_id);

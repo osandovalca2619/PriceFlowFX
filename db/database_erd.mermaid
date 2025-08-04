@@ -1,0 +1,340 @@
+erDiagram
+    %% USUARIOS Y SEGURIDAD
+    app_user {
+        SERIAL id PK
+        VARCHAR username UK
+        VARCHAR full_name
+        INTEGER profile_id FK
+        INTEGER sales_group_id FK
+        VARCHAR status
+        INTEGER created_by FK
+        TIMESTAMP created_at
+        INTEGER modified_by FK
+        TIMESTAMP modified_at
+    }
+    
+    user_profile {
+        SERIAL id PK
+        VARCHAR name UK
+        VARCHAR description
+    }
+    
+    sales_group {
+        SERIAL id PK
+        VARCHAR name UK
+        VARCHAR description
+    }
+    
+    app_parameter {
+        SERIAL id PK
+        VARCHAR code UK
+        VARCHAR description
+        VARCHAR value_str1
+        VARCHAR value_str2
+        INTEGER value_int1
+        INTEGER value_int2
+        NUMERIC value_dec1
+        NUMERIC value_dec2
+        VARCHAR status
+        INTEGER created_by FK
+        TIMESTAMP created_at
+        INTEGER modified_by FK
+        TIMESTAMP modified_at
+    }
+    
+    %% CLIENTES Y SEGMENTACIÓN
+    client {
+        SERIAL id PK
+        VARCHAR client_identifier UK
+        VARCHAR name
+        INTEGER segment_id FK
+        VARCHAR status
+        INTEGER created_by FK
+        TIMESTAMP created_at
+        INTEGER modified_by FK
+        TIMESTAMP modified_at
+    }
+    
+    segment {
+        SERIAL id PK
+        VARCHAR name UK
+    }
+    
+    client_external_id {
+        SERIAL id PK
+        INTEGER client_id FK
+        VARCHAR origin_system
+        VARCHAR origin_code
+    }
+    
+    app_user_external_id {
+        SERIAL id PK
+        INTEGER user_id FK
+        VARCHAR origin_system
+        VARCHAR origin_code
+        INTEGER client_id FK
+    }
+    
+    %% DIVISAS Y GEOGRAFÍA
+    currency {
+        SERIAL id PK
+        VARCHAR code UK
+        VARCHAR name
+        VARCHAR symbol
+        VARCHAR country
+        INTEGER decimals
+        BOOLEAN is_strong_currency
+        VARCHAR status
+        INTEGER created_by FK
+        TIMESTAMP created_at
+        INTEGER modified_by FK
+        TIMESTAMP modified_at
+    }
+    
+    country {
+        SERIAL id PK
+        VARCHAR code UK
+        VARCHAR name
+    }
+    
+    currency_country {
+        SERIAL id PK
+        INTEGER currency_id FK
+        INTEGER country_id FK
+    }
+    
+    holiday {
+        SERIAL id PK
+        INTEGER country_id FK
+        DATE holiday_date
+        VARCHAR name
+        TEXT description
+    }
+    
+    %% PRODUCTOS Y OPERACIONES FX
+    fx_product {
+        SERIAL id PK
+        VARCHAR name UK
+        VARCHAR description
+    }
+    
+    fx_operation_status {
+        SERIAL id PK
+        VARCHAR code UK
+        VARCHAR description
+        INTEGER display_order
+    }
+    
+    quote_origin {
+        SERIAL id PK
+        VARCHAR name UK
+    }
+    
+    operation_folder {
+        SERIAL id PK
+        VARCHAR code UK
+        VARCHAR name
+        VARCHAR folder_type
+        VARCHAR status
+        INTEGER created_by FK
+        TIMESTAMP created_at
+        INTEGER modified_by FK
+        TIMESTAMP modified_at
+    }
+    
+    %% OPERACIONES SPOT
+    fx_operation_spot {
+        SERIAL id PK
+        INTEGER client_id FK
+        INTEGER user_id FK
+        NUMERIC amount_currency1
+        NUMERIC amount_currency2
+        NUMERIC cost_price
+        NUMERIC margin
+        NUMERIC client_price
+        DATE start_date
+        TIMESTAMP register_date
+        DATE value_date
+        VARCHAR payment_method_currency1
+        VARCHAR payment_method_currency2
+        VARCHAR operation_side
+        INTEGER base_currency_id FK
+        INTEGER quote_currency_id FK
+        INTEGER origin_id FK
+        INTEGER segment_id FK
+        INTEGER destination_system_id
+        INTEGER source_system_id
+        TEXT comments
+        INTEGER trading_folder_id FK
+        INTEGER sales_folder_id FK
+        INTEGER status_id FK
+        INTEGER created_by FK
+        TIMESTAMP created_at
+        INTEGER modified_by FK
+        TIMESTAMP modified_at
+    }
+    
+    %% OPERACIONES FORWARD
+    fx_operation_forward {
+        SERIAL id PK
+        INTEGER client_id FK
+        INTEGER user_id FK
+        NUMERIC amount_currency1
+        NUMERIC amount_currency2
+        NUMERIC cost_price
+        NUMERIC margin
+        NUMERIC client_price
+        DATE start_date
+        TIMESTAMP register_date
+        DATE value_date
+        VARCHAR payment_method_currency1
+        VARCHAR payment_method_currency2
+        VARCHAR operation_side
+        INTEGER base_currency_id FK
+        INTEGER quote_currency_id FK
+        INTEGER origin_id FK
+        INTEGER segment_id FK
+        INTEGER destination_system_id
+        INTEGER source_system_id
+        TEXT comments
+        INTEGER trading_folder_id FK
+        INTEGER sales_folder_id FK
+        INTEGER status_id FK
+        DATE forward_expiry_date
+        DATE fixing_date
+        VARCHAR info_source
+        VARCHAR reference_index
+        VARCHAR settlement_type
+        BOOLEAN has_split
+        VARCHAR split_currency_pair
+        NUMERIC split_amount
+        INTEGER settlement_currency_id FK
+        INTEGER tenor_days
+        NUMERIC cost_price_usd
+        NUMERIC client_price_usd
+        NUMERIC forward_points
+        NUMERIC forward_margin
+        NUMERIC client_price_spot
+        NUMERIC client_price_forward
+        INTEGER created_by FK
+        TIMESTAMP created_at
+        INTEGER modified_by FK
+        TIMESTAMP modified_at
+    }
+    
+    %% EVENTOS Y AUDITORÍA
+    fx_operation_spot_event {
+        SERIAL id PK
+        INTEGER fx_operation_spot_id FK
+        INTEGER event_type_id FK
+        TIMESTAMP event_timestamp
+        INTEGER event_user_id FK
+    }
+    
+    fx_operation_forward_event {
+        SERIAL id PK
+        INTEGER fx_operation_forward_id FK
+        INTEGER event_type_id FK
+        TIMESTAMP event_timestamp
+        INTEGER event_user_id FK
+    }
+    
+    %% PRECIOS Y SPREADS
+    fx_price {
+        SERIAL id PK
+        INTEGER currency_id FK
+        INTEGER fx_product_id FK
+        DATE price_date
+        NUMERIC price_bid
+        NUMERIC price_mid
+        NUMERIC price_offer
+        VARCHAR info_source
+        TIMESTAMP created_at
+        TIMESTAMP updated_at
+    }
+    
+    market_scenario {
+        SERIAL id PK
+        VARCHAR name UK
+        VARCHAR description
+    }
+    
+    sales_spread {
+        SERIAL id PK
+        INTEGER base_currency_id FK
+        INTEGER quote_currency_id FK
+        INTEGER origin_id FK
+        INTEGER segment_id FK
+        INTEGER fx_product_id FK
+        BOOLEAN market_hours
+        NUMERIC spread_buy
+        NUMERIC spread_sell
+        TIMESTAMP created_at
+    }
+    
+    trading_spread_range {
+        SERIAL id PK
+        INTEGER currency_id FK
+        INTEGER scenario_id FK
+        NUMERIC amount_min
+        NUMERIC amount_max
+        NUMERIC spread
+        TIMESTAMP created_at
+    }
+    
+    %% RELACIONES PRINCIPALES
+    
+    %% Usuarios
+    app_user ||--|| user_profile : "belongs to"
+    app_user ||--o{ sales_group : "belongs to"
+    app_user ||--o{ app_user : "created by"
+    app_user ||--o{ app_user : "modified by"
+    
+    %% Clientes
+    client ||--|| segment : "belongs to"
+    client ||--o{ client_external_id : "has"
+    app_user ||--o{ app_user_external_id : "has"
+    
+    %% Geografía y Divisas
+    currency ||--o{ currency_country : "used in"
+    country ||--o{ currency_country : "uses"
+    country ||--o{ holiday : "has"
+    
+    %% Operaciones FX
+    fx_operation_spot ||--|| client : "belongs to"
+    fx_operation_spot ||--|| app_user : "created by"
+    fx_operation_spot ||--|| currency : "base currency"
+    fx_operation_spot ||--|| currency : "quote currency"
+    fx_operation_spot ||--|| fx_operation_status : "has status"
+    fx_operation_spot ||--|| quote_origin : "originated from"
+    fx_operation_spot ||--|| segment : "for segment"
+    fx_operation_spot ||--o{ operation_folder : "trading folder"
+    fx_operation_spot ||--o{ operation_folder : "sales folder"
+    
+    fx_operation_forward ||--|| client : "belongs to"
+    fx_operation_forward ||--|| app_user : "created by"
+    fx_operation_forward ||--|| currency : "base currency"
+    fx_operation_forward ||--|| currency : "quote currency"
+    fx_operation_forward ||--|| fx_operation_status : "has status"
+    fx_operation_forward ||--|| quote_origin : "originated from"
+    fx_operation_forward ||--|| segment : "for segment"
+    fx_operation_forward ||--o{ operation_folder : "trading folder"
+    fx_operation_forward ||--o{ operation_folder : "sales folder"
+    fx_operation_forward ||--o{ currency : "settlement currency"
+    
+    %% Eventos
+    fx_operation_spot ||--o{ fx_operation_spot_event : "has events"
+    fx_operation_forward ||--o{ fx_operation_forward_event : "has events"
+    
+    %% Precios y Spreads
+    fx_price ||--|| currency : "for currency"
+    fx_price ||--|| fx_product : "for product"
+    
+    sales_spread ||--|| currency : "base currency"
+    sales_spread ||--|| currency : "quote currency"
+    sales_spread ||--|| quote_origin : "for origin"
+    sales_spread ||--|| segment : "for segment"
+    sales_spread ||--|| fx_product : "for product"
+    
+    trading_spread_range ||--|| currency : "for currency"
+    trading_spread_range ||--|| market_scenario : "for scenario"
