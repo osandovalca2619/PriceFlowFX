@@ -24,6 +24,8 @@ CREATE TABLE fx_operation_spot (
     comments TEXT,
     trading_folder_id INTEGER REFERENCES operation_folder(id) ON DELETE SET NULL ON UPDATE CASCADE,
     sales_folder_id INTEGER REFERENCES operation_folder(id) ON DELETE SET NULL ON UPDATE CASCADE,
+    pnl_calculated NUMERIC(18,2),                        -- PnL calculado
+    workflow_step VARCHAR(30),
     status_id INTEGER NOT NULL REFERENCES fx_operation_status(id) DEFAULT 2,
     created_by INTEGER NOT NULL REFERENCES app_user(id) ON DELETE RESTRICT,
     created_at TIMESTAMP DEFAULT NOW(),

@@ -4,6 +4,7 @@ CREATE TABLE app_user (
     id SERIAL PRIMARY KEY,
     username VARCHAR(50) UNIQUE NOT NULL,
     full_name VARCHAR(100) NOT NULL,
+    password VARCHAR(255),
     profile_id INTEGER NOT NULL REFERENCES user_profile(id) ON DELETE RESTRICT ON UPDATE CASCADE,
     sales_group_id INTEGER REFERENCES sales_group(id) ON DELETE SET NULL ON UPDATE CASCADE,
     status VARCHAR(10) NOT NULL DEFAULT 'activo' CHECK (status IN ('activo', 'inactivo')),
@@ -20,6 +21,7 @@ CREATE INDEX idx_app_user_sales_group_id ON app_user(sales_group_id);
 
 COMMENT ON TABLE app_user IS 'Almacena los usuarios de la aplicación FX';
 COMMENT ON COLUMN app_user.username IS 'Nombre de usuario único';
+COMMENT ON COLUMN app_user.password IS 'Contraseña hasheada del usuario';
 COMMENT ON COLUMN app_user.profile_id IS 'Perfil de usuario (FK a user_profile)';
 COMMENT ON COLUMN app_user.sales_group_id IS 'Grupo de venta (FK a sales_group)';
 COMMENT ON COLUMN app_user.status IS 'Estado del usuario: activo o inactivo';
