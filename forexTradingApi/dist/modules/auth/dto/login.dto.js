@@ -10,20 +10,35 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.LoginDto = void 0;
+const swagger_1 = require("@nestjs/swagger");
 const class_validator_1 = require("class-validator");
 class LoginDto {
-    email;
-    password_hash;
+    username;
+    password;
 }
 exports.LoginDto = LoginDto;
 __decorate([
-    (0, class_validator_1.IsEmail)(),
-    (0, class_validator_1.IsNotEmpty)(),
+    (0, swagger_1.ApiProperty)({
+        description: 'Username for authentication',
+        example: 'johndoe',
+        minLength: 3,
+        maxLength: 50,
+    }),
+    (0, class_validator_1.IsNotEmpty)({ message: 'Username is required' }),
+    (0, class_validator_1.IsString)({ message: 'Username must be a string' }),
+    (0, class_validator_1.MinLength)(3, { message: 'Username must be at least 3 characters long' }),
+    (0, class_validator_1.MaxLength)(50, { message: 'Username must not exceed 50 characters' }),
     __metadata("design:type", String)
-], LoginDto.prototype, "email", void 0);
+], LoginDto.prototype, "username", void 0);
 __decorate([
-    (0, class_validator_1.IsString)(),
-    (0, class_validator_1.IsNotEmpty)(),
+    (0, swagger_1.ApiProperty)({
+        description: 'Password for authentication',
+        example: 'SecurePassword123!',
+        minLength: 8,
+    }),
+    (0, class_validator_1.IsNotEmpty)({ message: 'Password is required' }),
+    (0, class_validator_1.IsString)({ message: 'Password must be a string' }),
+    (0, class_validator_1.MinLength)(8, { message: 'Password must be at least 8 characters long' }),
     __metadata("design:type", String)
-], LoginDto.prototype, "password_hash", void 0);
+], LoginDto.prototype, "password", void 0);
 //# sourceMappingURL=login.dto.js.map

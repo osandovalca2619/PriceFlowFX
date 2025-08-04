@@ -10,27 +10,81 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.UpdateUserDto = void 0;
+const swagger_1 = require("@nestjs/swagger");
 const class_validator_1 = require("class-validator");
 class UpdateUserDto {
-    email;
-    password_hash;
-    full_name;
+    username;
+    fullName;
+    profileId;
+    salesGroupId;
+    status;
+    password;
 }
 exports.UpdateUserDto = UpdateUserDto;
 __decorate([
-    (0, class_validator_1.IsEmail)(),
+    (0, swagger_1.ApiPropertyOptional)({
+        description: 'Unique username',
+        example: 'johndoe_updated',
+        minLength: 3,
+        maxLength: 50,
+    }),
     (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)({ message: 'Username must be a string' }),
+    (0, class_validator_1.MinLength)(3, { message: 'Username must be at least 3 characters long' }),
+    (0, class_validator_1.MaxLength)(50, { message: 'Username must not exceed 50 characters' }),
     __metadata("design:type", String)
-], UpdateUserDto.prototype, "email", void 0);
+], UpdateUserDto.prototype, "username", void 0);
 __decorate([
-    (0, class_validator_1.IsString)(),
+    (0, swagger_1.ApiPropertyOptional)({
+        description: 'User full name',
+        example: 'John Doe Updated',
+        minLength: 2,
+        maxLength: 100,
+    }),
     (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.MinLength)(8),
+    (0, class_validator_1.IsString)({ message: 'Full name must be a string' }),
+    (0, class_validator_1.MinLength)(2, { message: 'Full name must be at least 2 characters long' }),
+    (0, class_validator_1.MaxLength)(100, { message: 'Full name must not exceed 100 characters' }),
     __metadata("design:type", String)
-], UpdateUserDto.prototype, "password_hash", void 0);
+], UpdateUserDto.prototype, "fullName", void 0);
 __decorate([
-    (0, class_validator_1.IsString)(),
+    (0, swagger_1.ApiPropertyOptional)({
+        description: 'User profile ID',
+        example: 2,
+    }),
     (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsInt)({ message: 'Profile ID must be an integer' }),
+    __metadata("design:type", Number)
+], UpdateUserDto.prototype, "profileId", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({
+        description: 'Sales group ID',
+        example: 2,
+    }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsInt)({ message: 'Sales group ID must be an integer' }),
+    __metadata("design:type", Number)
+], UpdateUserDto.prototype, "salesGroupId", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({
+        description: 'User status',
+        example: 'inactivo',
+        enum: ['activo', 'inactivo'],
+    }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsIn)(['activo', 'inactivo'], { message: 'Status must be either "activo" or "inactivo"' }),
     __metadata("design:type", String)
-], UpdateUserDto.prototype, "full_name", void 0);
+], UpdateUserDto.prototype, "status", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({
+        description: 'User password',
+        example: 'NewSecurePassword123!',
+        minLength: 8,
+    }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)({ message: 'Password must be a string' }),
+    (0, class_validator_1.MinLength)(8, { message: 'Password must be at least 8 characters long' }),
+    (0, class_validator_1.MaxLength)(255, { message: 'Password must not exceed 255 characters' }),
+    __metadata("design:type", String)
+], UpdateUserDto.prototype, "password", void 0);
 //# sourceMappingURL=update-user.dto.js.map

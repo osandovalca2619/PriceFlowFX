@@ -1,8 +1,13 @@
-import { Transaction } from '../../transactions/entities/transaction.entity';
 export declare class User {
     id: number;
-    email: string;
-    password_hash: string;
-    full_name: string;
-    transactions: Transaction[];
+    username: string;
+    fullName: string;
+    profileId: number;
+    salesGroupId: number | null;
+    status: 'activo' | 'inactivo';
+    createdBy: number;
+    createdAt: Date;
+    modifiedBy: number | null;
+    modifiedAt: Date | null;
+    password?: string;
 }

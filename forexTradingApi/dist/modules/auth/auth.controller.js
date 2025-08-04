@@ -14,28 +14,59 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AuthController = void 0;
 const common_1 = require("@nestjs/common");
+const swagger_1 = require("@nestjs/swagger");
 const auth_service_1 = require("./auth.service");
-const jwt_auth_guard_1 = require("./guards/jwt-auth.guard");
 const login_dto_1 = require("./dto/login.dto");
+const jwt_auth_guard_1 = require("./guards/jwt-auth.guard");
 let AuthController = class AuthController {
     authService;
     constructor(authService) {
         this.authService = authService;
     }
     async login(loginDto) {
-        const user = await this.authService.validateUser(loginDto.email, loginDto.password_hash);
-        if (!user) {
-            throw new Error('Invalid credentials');
-        }
-        return this.authService.login(user);
+        return this.authService.login(loginDto.username, loginDto.password);
     }
-    getProfile(req) {
-        return req.user;
+    async getProfile(req) {
+        return this.authService.getProfile(req.user.id);
+    }
+    async validateToken(req) {
+        return {
+            valid: true,
+            user: {
+                id: req.user.id,
+                username: req.user.username,
+                fullName: req.user.fullName,
+            }
+        };
     }
 };
 exports.AuthController = AuthController;
 __decorate([
     (0, common_1.Post)('login'),
+    (0, swagger_1.ApiOperation)({ summary: 'User login' }),
+    (0, swagger_1.ApiResponse)({
+        status: 200,
+        description: 'Login successful',
+        schema: {
+            type: 'object',
+            properties: {
+                access_token: { type: 'string', example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...' },
+                user: {
+                    type: 'object',
+                    properties: {
+                        id: { type: 'number', example: 1 },
+                        username: { type: 'string', example: 'johndoe' },
+                        fullName: { type: 'string', example: 'John Doe' },
+                        profileId: { type: 'number', example: 1 },
+                        salesGroupId: { type: 'number', example: 1, nullable: true },
+                        status: { type: 'string', example: 'activo' },
+                    }
+                }
+            }
+        }
+    }),
+    (0, swagger_1.ApiResponse)({ status: 401, description: 'Invalid credentials' }),
+    (0, swagger_1.ApiResponse)({ status: 400, description: 'Bad request - validation errors' }),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [login_dto_1.LoginDto]),
@@ -44,12 +75,60 @@ __decorate([
 __decorate([
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
     (0, common_1.Get)('profile'),
+    (0, swagger_1.ApiBearerAuth)(),
+    (0, swagger_1.ApiOperation)({ summary: 'Get current user profile' }),
+    (0, swagger_1.ApiResponse)({
+        status: 200,
+        description: 'Profile retrieved successfully',
+        schema: {
+            type: 'object',
+            properties: {
+                id: { type: 'number', example: 1 },
+                username: { type: 'string', example: 'johndoe' },
+                fullName: { type: 'string', example: 'John Doe' },
+                profileId: { type: 'number', example: 1 },
+                salesGroupId: { type: 'number', example: 1, nullable: true },
+                status: { type: 'string', example: 'activo' },
+            }
+        }
+    }),
+    (0, swagger_1.ApiResponse)({ status: 401, description: 'Unauthorized' }),
     __param(0, (0, common_1.Request)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object]),
-    __metadata("design:returntype", void 0)
+    __metadata("design:returntype", Promise)
 ], AuthController.prototype, "getProfile", null);
+__decorate([
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, common_1.Post)('validate'),
+    (0, swagger_1.ApiBearerAuth)(),
+    (0, swagger_1.ApiOperation)({ summary: 'Validate current token' }),
+    (0, swagger_1.ApiResponse)({
+        status: 200,
+        description: 'Token is valid',
+        schema: {
+            type: 'object',
+            properties: {
+                valid: { type: 'boolean', example: true },
+                user: {
+                    type: 'object',
+                    properties: {
+                        id: { type: 'number', example: 1 },
+                        username: { type: 'string', example: 'johndoe' },
+                        fullName: { type: 'string', example: 'John Doe' },
+                    }
+                }
+            }
+        }
+    }),
+    (0, swagger_1.ApiResponse)({ status: 401, description: 'Invalid token' }),
+    __param(0, (0, common_1.Request)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
+], AuthController.prototype, "validateToken", null);
 exports.AuthController = AuthController = __decorate([
+    (0, swagger_1.ApiTags)('auth'),
     (0, common_1.Controller)('auth'),
     __metadata("design:paramtypes", [auth_service_1.AuthService])
 ], AuthController);

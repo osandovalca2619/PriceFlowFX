@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, ConflictException, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from './entities/user.entity';
@@ -14,50 +14,132 @@ export class UsersService {
   ) {}
 
   async create(createUserDto: CreateUserDto): Promise<User> {
-    const salt = await bcrypt.genSalt();
-    const hashedPassword = await bcrypt.hash(createUserDto.password_hash, salt);
+    // Check if username already exists
+    const existingUser = await this.findByUsername(createUserDto.username);
+    if (existingUser) {
+      throw new ConflictException('User with this username already exists');
+    }
+
+    let hashedPassword: string | undefined;
+    
+    // Hash the password if provided (for Opción 1)
+    if (createUserDto.password) {
+      const saltRounds = 10;
+      hashedPassword = await bcrypt.hash(createUserDto.password, saltRounds);
+    }
+
     const user = this.usersRepository.create({
       ...createUserDto,
-      password_hash: hashedPassword,
+      password: hashedPassword,
+      status: createUserDto.status || 'activo',
     });
+
     return this.usersRepository.save(user);
   }
 
-  findAll(): Promise<User[]> {
-    return this.usersRepository.find();
+  async findAll(): Promise<User[]> {
+    return this.usersRepository.find({
+      select: ['id', 'username', 'fullName', 'profileId', 'salesGroupId', 'status', 'createdAt', 'modifiedAt']
+    });
   }
 
   async findOne(id: number): Promise<User> {
-    const user = await this.usersRepository.findOne({ where: { id } });
+    const user = await this.usersRepository.findOne({ 
+      where: { id },
+      select: ['id', 'username', 'fullName', 'profileId', 'salesGroupId', 'status', 'createdBy', 'createdAt', 'modifiedBy', 'modifiedAt']
+    });
+    
     if (!user) {
-      throw new NotFoundException(`User with ID ${id} not found`);
+      throw new NotFoundException('User not found');
     }
+    
     return user;
   }
 
-  async findOneByEmail(email: string): Promise<User> {
-    return this.usersRepository.findOne({ where: { email } });
+  async findByUsername(username: string): Promise<User | null> {
+    return this.usersRepository.findOne({ where: { username } });
   }
 
-  async update(id: number, updateUserDto: UpdateUserDto): Promise<User> {
-    if (updateUserDto.password_hash) {
-      const salt = await bcrypt.genSalt();
-      updateUserDto.password_hash = await bcrypt.hash(updateUserDto.password_hash, salt);
-    }
-    const user = await this.usersRepository.preload({
-      id,
-      ...updateUserDto,
+  async findByUsernameWithPassword(username: string): Promise<User | null> {
+    return this.usersRepository.findOne({ 
+      where: { username },
+      select: ['id', 'username', 'fullName', 'profileId', 'salesGroupId', 'status', 'password', 'createdAt', 'modifiedAt']
     });
-    if (!user) {
-      throw new NotFoundException(`User with ID ${id} not found`);
+  }
+
+  async findActiveUsers(): Promise<User[]> {
+    return this.usersRepository.find({
+      where: { status: 'activo' },
+      select: ['id', 'username', 'fullName', 'profileId', 'salesGroupId', 'status', 'createdAt']
+    });
+  }
+
+  async findByProfileId(profileId: number): Promise<User[]> {
+    return this.usersRepository.find({
+      where: { profileId },
+      select: ['id', 'username', 'fullName', 'status', 'createdAt']
+    });
+  }
+
+  async findBySalesGroupId(salesGroupId: number): Promise<User[]> {
+    return this.usersRepository.find({
+      where: { salesGroupId },
+      select: ['id', 'username', 'fullName', 'status', 'createdAt']
+    });
+  }
+
+  async update(id: number, updateUserDto: UpdateUserDto, modifiedBy: number): Promise<User> {
+    const user = await this.findOne(id);
+    
+    // If password is being updated, hash it
+    if (updateUserDto.password) {
+      const saltRounds = 10;
+      updateUserDto.password = await bcrypt.hash(updateUserDto.password, saltRounds);
     }
-    return this.usersRepository.save(user);
+
+    // Check if username is being changed to one that already exists
+    if (updateUserDto.username && updateUserDto.username !== user.username) {
+      const existingUser = await this.findByUsername(updateUserDto.username);
+      if (existingUser) {
+        throw new ConflictException('User with this username already exists');
+      }
+    }
+
+    await this.usersRepository.update(id, {
+      ...updateUserDto,
+      modifiedBy,
+      modifiedAt: new Date(),
+    });
+    
+    return this.findOne(id);
+  }
+
+  async deactivateUser(id: number, modifiedBy: number): Promise<User> {
+    await this.usersRepository.update(id, {
+      status: 'inactivo',
+      modifiedBy,
+      modifiedAt: new Date(),
+    });
+    
+    return this.findOne(id);
+  }
+
+  async activateUser(id: number, modifiedBy: number): Promise<User> {
+    await this.usersRepository.update(id, {
+      status: 'activo',
+      modifiedBy,
+      modifiedAt: new Date(),
+    });
+    
+    return this.findOne(id);
   }
 
   async remove(id: number): Promise<void> {
-    const result = await this.usersRepository.delete(id);
-    if (result.affected === 0) {
-      throw new NotFoundException(`User with ID ${id} not found`);
-    }
+    const user = await this.findOne(id);
+    await this.usersRepository.remove(user);
+  }
+
+  async validatePassword(plainTextPassword: string, hashedPassword: string): Promise<boolean> {
+    return bcrypt.compare(plainTextPassword, hashedPassword);
   }
 }

@@ -1,5 +1,9 @@
 export declare class CreateUserDto {
-    email: string;
-    password_hash: string;
-    full_name: string;
+    username: string;
+    fullName: string;
+    profileId: number;
+    salesGroupId?: number;
+    status?: 'activo' | 'inactivo';
+    createdBy: number;
+    password?: string;
 }

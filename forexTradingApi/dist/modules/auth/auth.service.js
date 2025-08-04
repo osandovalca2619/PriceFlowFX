@@ -54,18 +54,69 @@ let AuthService = class AuthService {
         this.usersService = usersService;
         this.jwtService = jwtService;
     }
-    async validateUser(email, pass) {
-        const user = await this.usersService.findOneByEmail(email);
-        if (user && (await bcrypt.compare(pass, user.password_hash))) {
-            const { password_hash, ...result } = user;
+    async validateUser(username, password) {
+        const user = await this.usersService.findByUsernameWithPassword(username);
+        if (!user) {
+            return null;
+        }
+        if (user.status !== 'activo') {
+            return null;
+        }
+        if (!user.password) {
+            return null;
+        }
+        const isPasswordValid = await bcrypt.compare(password, user.password);
+        if (isPasswordValid) {
+            const { password: _, ...result } = user;
             return result;
         }
         return null;
     }
-    async login(user) {
-        const payload = { email: user.email, sub: user.id };
+    async login(username, password) {
+        const user = await this.validateUser(username, password);
+        if (!user) {
+            throw new common_1.UnauthorizedException('Invalid credentials');
+        }
+        const payload = {
+            username: user.username,
+            sub: user.id,
+            profileId: user.profileId,
+            salesGroupId: user.salesGroupId
+        };
         return {
             access_token: this.jwtService.sign(payload),
+            user: {
+                id: user.id,
+                username: user.username,
+                fullName: user.fullName,
+                profileId: user.profileId,
+                salesGroupId: user.salesGroupId,
+                status: user.status,
+            },
+        };
+    }
+    async validateUserById(userId) {
+        const user = await this.usersService.findOne(userId);
+        if (!user) {
+            throw new common_1.UnauthorizedException('User not found');
+        }
+        if (user.status !== 'activo') {
+            throw new common_1.UnauthorizedException('User is inactive');
+        }
+        return user;
+    }
+    async getProfile(userId) {
+        const user = await this.usersService.findOne(userId);
+        if (!user) {
+            throw new common_1.UnauthorizedException('User not found');
+        }
+        return {
+            id: user.id,
+            username: user.username,
+            fullName: user.fullName,
+            profileId: user.profileId,
+            salesGroupId: user.salesGroupId,
+            status: user.status,
         };
     }
 };

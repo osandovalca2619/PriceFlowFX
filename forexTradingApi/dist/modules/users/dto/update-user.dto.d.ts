@@ -1,5 +1,8 @@
 export declare class UpdateUserDto {
-    email?: string;
-    password_hash?: string;
-    full_name?: string;
+    username?: string;
+    fullName?: string;
+    profileId?: number;
+    salesGroupId?: number;
+    status?: 'activo' | 'inactivo';
+    password?: string;
 }

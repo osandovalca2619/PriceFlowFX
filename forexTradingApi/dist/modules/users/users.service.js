@@ -57,46 +57,105 @@ let UsersService = class UsersService {
         this.usersRepository = usersRepository;
     }
     async create(createUserDto) {
-        const salt = await bcrypt.genSalt();
-        const hashedPassword = await bcrypt.hash(createUserDto.password_hash, salt);
+        const existingUser = await this.findByUsername(createUserDto.username);
+        if (existingUser) {
+            throw new common_1.ConflictException('User with this username already exists');
+        }
+        let hashedPassword;
+        if (createUserDto.password) {
+            const saltRounds = 10;
+            hashedPassword = await bcrypt.hash(createUserDto.password, saltRounds);
+        }
         const user = this.usersRepository.create({
             ...createUserDto,
-            password_hash: hashedPassword,
+            password: hashedPassword,
+            status: createUserDto.status || 'activo',
         });
         return this.usersRepository.save(user);
     }
-    findAll() {
-        return this.usersRepository.find();
+    async findAll() {
+        return this.usersRepository.find({
+            select: ['id', 'username', 'fullName', 'profileId', 'salesGroupId', 'status', 'createdAt', 'modifiedAt']
+        });
     }
     async findOne(id) {
-        const user = await this.usersRepository.findOne({ where: { id } });
+        const user = await this.usersRepository.findOne({
+            where: { id },
+            select: ['id', 'username', 'fullName', 'profileId', 'salesGroupId', 'status', 'createdBy', 'createdAt', 'modifiedBy', 'modifiedAt']
+        });
         if (!user) {
-            throw new common_1.NotFoundException(`User with ID ${id} not found`);
+            throw new common_1.NotFoundException('User not found');
         }
         return user;
     }
-    async findOneByEmail(email) {
-        return this.usersRepository.findOne({ where: { email } });
+    async findByUsername(username) {
+        return this.usersRepository.findOne({ where: { username } });
     }
-    async update(id, updateUserDto) {
-        if (updateUserDto.password_hash) {
-            const salt = await bcrypt.genSalt();
-            updateUserDto.password_hash = await bcrypt.hash(updateUserDto.password_hash, salt);
-        }
-        const user = await this.usersRepository.preload({
-            id,
-            ...updateUserDto,
+    async findByUsernameWithPassword(username) {
+        return this.usersRepository.findOne({
+            where: { username },
+            select: ['id', 'username', 'fullName', 'profileId', 'salesGroupId', 'status', 'password', 'createdAt', 'modifiedAt']
         });
-        if (!user) {
-            throw new common_1.NotFoundException(`User with ID ${id} not found`);
+    }
+    async findActiveUsers() {
+        return this.usersRepository.find({
+            where: { status: 'activo' },
+            select: ['id', 'username', 'fullName', 'profileId', 'salesGroupId', 'status', 'createdAt']
+        });
+    }
+    async findByProfileId(profileId) {
+        return this.usersRepository.find({
+            where: { profileId },
+            select: ['id', 'username', 'fullName', 'status', 'createdAt']
+        });
+    }
+    async findBySalesGroupId(salesGroupId) {
+        return this.usersRepository.find({
+            where: { salesGroupId },
+            select: ['id', 'username', 'fullName', 'status', 'createdAt']
+        });
+    }
+    async update(id, updateUserDto, modifiedBy) {
+        const user = await this.findOne(id);
+        if (updateUserDto.password) {
+            const saltRounds = 10;
+            updateUserDto.password = await bcrypt.hash(updateUserDto.password, saltRounds);
         }
-        return this.usersRepository.save(user);
+        if (updateUserDto.username && updateUserDto.username !== user.username) {
+            const existingUser = await this.findByUsername(updateUserDto.username);
+            if (existingUser) {
+                throw new common_1.ConflictException('User with this username already exists');
+            }
+        }
+        await this.usersRepository.update(id, {
+            ...updateUserDto,
+            modifiedBy,
+            modifiedAt: new Date(),
+        });
+        return this.findOne(id);
+    }
+    async deactivateUser(id, modifiedBy) {
+        await this.usersRepository.update(id, {
+            status: 'inactivo',
+            modifiedBy,
+            modifiedAt: new Date(),
+        });
+        return this.findOne(id);
+    }
+    async activateUser(id, modifiedBy) {
+        await this.usersRepository.update(id, {
+            status: 'activo',
+            modifiedBy,
+            modifiedAt: new Date(),
+        });
+        return this.findOne(id);
     }
     async remove(id) {
-        const result = await this.usersRepository.delete(id);
-        if (result.affected === 0) {
-            throw new common_1.NotFoundException(`User with ID ${id} not found`);
-        }
+        const user = await this.findOne(id);
+        await this.usersRepository.remove(user);
+    }
+    async validatePassword(plainTextPassword, hashedPassword) {
+        return bcrypt.compare(plainTextPassword, hashedPassword);
     }
 };
 exports.UsersService = UsersService;
