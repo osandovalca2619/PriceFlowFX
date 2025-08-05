@@ -3,6 +3,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { APP_GUARD } from '@nestjs/core';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
+import { ScheduleModule } from '@nestjs/schedule';
 
 // Modules
 import { CommonModule } from './modules/common/common.module';
@@ -10,6 +11,8 @@ import { AuthModule } from './modules/auth/auth.module';
 import { UsersModule } from './modules/users/users.module';
 import { ProductsModule } from './modules/products/products.module';
 import { TransactionsModule } from './modules/transactions/transactions.module';
+import { CurrenciesModule } from './modules/currencies/currencies.module'; // ¡Agregamos esto!
+import { WebSocketModule } from './modules/websocket/websocket.module';
 
 // Database Configuration
 import { getDatabaseConfig } from './config/database.config';
@@ -25,6 +28,9 @@ import { getDatabaseConfig } from './config/database.config';
         abortEarly: true,
       },
     }),
+
+    // Schedule para cron jobs del WebSocket
+    ScheduleModule.forRoot(),
 
     // Rate Limiting (protección contra ataques de fuerza bruta)
     ThrottlerModule.forRoot([
@@ -53,11 +59,13 @@ import { getDatabaseConfig } from './config/database.config';
     }),
 
     // Módulos de la aplicación
-    CommonModule,        // ✅ Agregado - Servicios comunes (HashService)
-    AuthModule,
-    UsersModule,
-    ProductsModule,
-    TransactionsModule,
+    CommonModule,        // ✅ Servicios comunes (HashService)
+    AuthModule,          // ✅ Autenticación
+    UsersModule,         // ✅ Gestión de usuarios
+    ProductsModule,      // ✅ Gestión de productos
+    TransactionsModule,  // ✅ Gestión de transacciones
+    CurrenciesModule,    // ✅ Gestión de divisas (AGREGADO)
+    WebSocketModule,     // ✅ WebSocket para precios en tiempo real
   ],
   
   providers: [
@@ -76,7 +84,7 @@ export class AppModule {
 
   private validateEnvironment() {
     const requiredEnvVars = [
-      'SUPABASE_DB_PASSWORD',
+      'DATABASE_URL', // Cambiamos para usar tu variable actual
       'JWT_SECRET',
     ];
 
@@ -95,5 +103,7 @@ export class AppModule {
     if (jwtSecret && jwtSecret.length < 32) {
       throw new Error('JWT_SECRET must be at least 32 characters long');
     }
+
+    console.log('✅ Environment variables validated successfully');
   }
 }

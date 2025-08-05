@@ -1,5 +1,10 @@
 export declare class UpdateCurrencyDto {
     code?: string;
     name?: string;
-    exchange_rate_to_usd?: number;
+    symbol?: string;
+    country?: string;
+    decimals?: number;
+    isStrongCurrency?: boolean;
+    modifiedBy: number;
+    status?: string;
 }

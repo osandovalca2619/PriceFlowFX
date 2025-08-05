@@ -1,14 +1,17 @@
-// src/modules/websocket/websocket.module.ts
+// forexTradingApi/src/modules/websocket/websocket.module.ts
 import { Module } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
+import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { ScheduleModule } from '@nestjs/schedule';
 import { PriceWebSocketGateway } from './websocket.gateway';
-import { AuthModule } from '../auth/auth.module';
 import { PriceService } from './price.service';
+import { Currency } from '../currencies/entities/currency.entity';
 
 @Module({
   imports: [
-    AuthModule,
+    TypeOrmModule.forFeature([Currency]),
+    ScheduleModule.forRoot(),
     JwtModule.registerAsync({
       imports: [ConfigModule],
       useFactory: async (configService: ConfigService) => ({

@@ -1,14 +1,15 @@
+// forex-trading-app/components/dashboard/main-dashboard.tsx
 "use client"
 
 import React from "react"
-
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { LogOut, TrendingUp, Moon, Sun, Palette, Settings } from "lucide-react"
+import { LogOut, TrendingUp, Moon, Sun, Palette, Settings, Wifi, WifiOff } from "lucide-react"
 import { useTheme } from "@/components/theme/theme-provider"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { ChangePasswordForm } from "@/components/auth/change-password-form"
+import PriceDashboard from "@/components/PriceDashboard"
 
 // Trading modules
 import { PositionMX } from "@/components/trading/position-mx"
@@ -29,31 +30,58 @@ import { UsersManager } from "@/components/middle/users-manager"
 
 interface User {
   id: number
-  name: string
-  email: string
-  role: string
-  permissions: string[]
+  name?: string
+  fullName?: string
+  username?: string
+  email?: string
+  role?: string
+  permissions?: string[]
 }
 
 interface MainDashboardProps {
   user: User
   onLogout: () => void
+  isApiAuthenticated?: boolean
 }
 
-export function MainDashboard({ user, onLogout }: MainDashboardProps) {
+export function MainDashboard({ user, onLogout, isApiAuthenticated = false }: MainDashboardProps) {
   const { theme, style, setTheme, setStyle } = useTheme()
   const [showChangePassword, setShowChangePassword] = useState(false)
 
+  // Función helper para obtener el rol con fallback
+  const getUserRole = (user: User): string => {
+    return user.role || 'user'
+  }
+
+  // Función helper para obtener el nombre del usuario
+  const getUserDisplayName = (user: User): string => {
+    return user.name || user.fullName || user.username || user.email || 'Usuario'
+  }
+
+  // Función helper para formatear el rol
+  const formatRole = (role: string): string => {
+    if (!role) return 'Usuario'
+    return role.charAt(0).toUpperCase() + role.slice(1)
+  }
+
   const getModulesForRole = (role: string) => {
+    const priceModule = { 
+      id: "live-prices", 
+      label: "Precios en Vivo", 
+      component: () => <PriceDashboard />
+    }
+
     switch (role) {
       case "trading":
         return [
+          priceModule,
           { id: "position-mx", label: "Posición MX", component: PositionMX },
           { id: "spread-trading", label: "Spreads Trading", component: TradingSpreadManager },
           { id: "operations", label: "Consulta Operaciones", component: OperationsQuery },
         ]
       case "sales":
         return [
+          priceModule,
           { id: "prices", label: "Precios", component: PricesModule },
           { id: "operations", label: "Consulta Operaciones", component: OperationsQuery },
           { id: "spread-sales", label: "Spreads Ventas", component: SalesSpreadManager },
@@ -61,6 +89,7 @@ export function MainDashboard({ user, onLogout }: MainDashboardProps) {
         ]
       case "middle":
         return [
+          priceModule,
           { id: "operations", label: "Consulta Operaciones", component: OperationsQuery },
           { id: "clients", label: "Clientes", component: ClientsManager },
           { id: "holidays", label: "Feriados", component: HolidaysManager },
@@ -70,6 +99,7 @@ export function MainDashboard({ user, onLogout }: MainDashboardProps) {
         ]
       case "admin":
         return [
+          priceModule,
           { id: "position-mx", label: "Posición MX", component: PositionMX },
           { id: "spread-trading", label: "Spreads Trading", component: TradingSpreadManager },
           { id: "prices", label: "Precios", component: PricesModule },
@@ -83,11 +113,18 @@ export function MainDashboard({ user, onLogout }: MainDashboardProps) {
           { id: "users", label: "Usuarios", component: UsersManager },
         ]
       default:
-        return []
+        return [priceModule]
     }
   }
 
-  const modules = getModulesForRole(user.role)
+  const userRole = getUserRole(user)
+  const userDisplayName = getUserDisplayName(user)
+  const modules = getModulesForRole(userRole)
+
+  // Debug: mostrar información del usuario en consola
+  console.log('User object in MainDashboard:', user)
+  console.log('User role:', userRole)
+  console.log('User display name:', userDisplayName)
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
@@ -97,10 +134,26 @@ export function MainDashboard({ user, onLogout }: MainDashboardProps) {
           <div className="flex items-center space-x-4">
             <TrendingUp className="h-8 w-8 text-blue-600 dark:text-blue-400" />
             <div>
-              <h1 className="text-xl font-bold text-gray-900 dark:text-white">ForexTrade Institutional</h1>
-              <p className="text-sm text-gray-600 dark:text-gray-400">
-                {user.name} - {user.role.charAt(0).toUpperCase() + user.role.slice(1)}
-              </p>
+              <h1 className="text-xl font-bold text-gray-900 dark:text-white">PriceFlowFX</h1>
+              <div className="flex items-center space-x-2">
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  {userDisplayName} - {formatRole(userRole)}
+                </p>
+                {/* Indicador de estado de autenticación */}
+                <div className="flex items-center space-x-1">
+                  {isApiAuthenticated ? (
+                    <>
+                      <Wifi className="h-3 w-3 text-green-500" />
+                      <span className="text-xs text-green-600 dark:text-green-400">API</span>
+                    </>
+                  ) : (
+                    <>
+                      <WifiOff className="h-3 w-3 text-orange-500" />
+                      <span className="text-xs text-orange-600 dark:text-orange-400">Local</span>
+                    </>
+                  )}
+                </div>
+              </div>
             </div>
           </div>
 
@@ -135,21 +188,29 @@ export function MainDashboard({ user, onLogout }: MainDashboardProps) {
       </header>
 
       <div className="p-6">
-        <Tabs defaultValue={modules[0]?.id} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-2 lg:grid-cols-4 xl:grid-cols-6">
-            {modules.map((module) => (
-              <TabsTrigger key={module.id} value={module.id} className="text-xs">
-                {module.label}
-              </TabsTrigger>
-            ))}
-          </TabsList>
+        {modules.length > 0 ? (
+          <Tabs defaultValue={modules[0]?.id} className="space-y-6">
+            <TabsList className="grid w-full grid-cols-2 lg:grid-cols-4 xl:grid-cols-6">
+              {modules.map((module) => (
+                <TabsTrigger key={module.id} value={module.id} className="text-xs">
+                  {module.label}
+                </TabsTrigger>
+              ))}
+            </TabsList>
 
-          {modules.map((module) => (
-            <TabsContent key={module.id} value={module.id}>
-              {React.createElement(module.component, { user })}
-            </TabsContent>
-          ))}
-        </Tabs>
+            {modules.map((module) => (
+              <TabsContent key={module.id} value={module.id}>
+                {React.createElement(module.component, { user })}
+              </TabsContent>
+            ))}
+          </Tabs>
+        ) : (
+          <div className="text-center py-12">
+            <p className="text-gray-500 dark:text-gray-400">
+              No hay módulos disponibles para el rol: {userRole}
+            </p>
+          </div>
+        )}
       </div>
     </div>
   )
