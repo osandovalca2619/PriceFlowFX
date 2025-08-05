@@ -22,35 +22,110 @@ let CurrenciesService = class CurrenciesService {
     constructor(currenciesRepository) {
         this.currenciesRepository = currenciesRepository;
     }
-    create(createCurrencyDto) {
-        const currency = this.currenciesRepository.create(createCurrencyDto);
-        return this.currenciesRepository.save(currency);
+    async create(createCurrencyDto) {
+        try {
+            const existingCurrency = await this.currenciesRepository.findOne({
+                where: { code: createCurrencyDto.code }
+            });
+            if (existingCurrency) {
+                throw new common_1.ConflictException(`Currency with code ${createCurrencyDto.code} already exists`);
+            }
+            const currency = this.currenciesRepository.create({
+                ...createCurrencyDto,
+                createdAt: new Date(),
+            });
+            return await this.currenciesRepository.save(currency);
+        }
+        catch (error) {
+            if (error instanceof common_1.ConflictException) {
+                throw error;
+            }
+            throw new Error(`Failed to create currency: ${error.message}`);
+        }
     }
-    findAll() {
-        return this.currenciesRepository.find();
+    async findAll() {
+        return await this.currenciesRepository.find({
+            order: { code: 'ASC' }
+        });
+    }
+    async findActive() {
+        return await this.currenciesRepository.find({
+            where: { status: 'activo' },
+            order: { code: 'ASC' }
+        });
     }
     async findOne(id) {
-        const currency = await this.currenciesRepository.findOne({ where: { id } });
+        const currency = await this.currenciesRepository.findOne({
+            where: { id }
+        });
         if (!currency) {
             throw new common_1.NotFoundException(`Currency with ID ${id} not found`);
         }
         return currency;
     }
-    async update(id, updateCurrencyDto) {
-        const currency = await this.currenciesRepository.preload({
-            id,
-            ...updateCurrencyDto,
+    async findByCode(code) {
+        const currency = await this.currenciesRepository.findOne({
+            where: { code: code.toUpperCase() }
         });
         if (!currency) {
-            throw new common_1.NotFoundException(`Currency with ID ${id} not found`);
+            throw new common_1.NotFoundException(`Currency with code ${code} not found`);
         }
-        return this.currenciesRepository.save(currency);
+        return currency;
+    }
+    async update(id, updateCurrencyDto) {
+        const currency = await this.findOne(id);
+        if (updateCurrencyDto.code && updateCurrencyDto.code !== currency.code) {
+            const existingCurrency = await this.currenciesRepository.findOne({
+                where: { code: updateCurrencyDto.code }
+            });
+            if (existingCurrency) {
+                throw new common_1.ConflictException(`Currency with code ${updateCurrencyDto.code} already exists`);
+            }
+        }
+        Object.assign(currency, updateCurrencyDto);
+        currency.modifiedAt = new Date();
+        try {
+            return await this.currenciesRepository.save(currency);
+        }
+        catch (error) {
+            throw new Error(`Failed to update currency: ${error.message}`);
+        }
     }
     async remove(id) {
-        const result = await this.currenciesRepository.delete(id);
-        if (result.affected === 0) {
-            throw new common_1.NotFoundException(`Currency with ID ${id} not found`);
+        const currency = await this.findOne(id);
+        try {
+            await this.currenciesRepository.remove(currency);
         }
+        catch (error) {
+            throw new Error(`Failed to delete currency: ${error.message}`);
+        }
+    }
+    async deactivate(id, modifiedBy) {
+        return await this.update(id, {
+            status: 'inactivo',
+            modifiedBy
+        });
+    }
+    async activate(id, modifiedBy) {
+        return await this.update(id, {
+            status: 'activo',
+            modifiedBy
+        });
+    }
+    async getStats() {
+        const [total, active, inactive, strongCurrencies] = await Promise.all([
+            this.currenciesRepository.count(),
+            this.currenciesRepository.count({ where: { status: 'activo' } }),
+            this.currenciesRepository.count({ where: { status: 'inactivo' } }),
+            this.currenciesRepository.count({ where: { isStrongCurrency: true } })
+        ]);
+        return {
+            total,
+            active,
+            inactive,
+            strongCurrencies,
+            lastUpdated: new Date()
+        };
     }
 };
 exports.CurrenciesService = CurrenciesService;

@@ -11,25 +11,107 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.CreateCurrencyDto = void 0;
 const class_validator_1 = require("class-validator");
+const class_transformer_1 = require("class-transformer");
+const swagger_1 = require("@nestjs/swagger");
 class CreateCurrencyDto {
     code;
     name;
-    exchange_rate_to_usd;
+    symbol;
+    country;
+    decimals = 2;
+    isStrongCurrency;
+    createdBy;
+    status = 'activo';
 }
 exports.CreateCurrencyDto = CreateCurrencyDto;
 __decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Currency code (3 characters)',
+        example: 'USD',
+        maxLength: 3,
+        minLength: 3
+    }),
     (0, class_validator_1.IsString)(),
     (0, class_validator_1.IsNotEmpty)(),
+    (0, class_validator_1.Length)(3, 3, { message: 'Currency code must be exactly 3 characters' }),
+    (0, class_transformer_1.Transform)(({ value }) => value?.toUpperCase()),
     __metadata("design:type", String)
 ], CreateCurrencyDto.prototype, "code", void 0);
 __decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Currency name',
+        example: 'US Dollar',
+        maxLength: 50
+    }),
     (0, class_validator_1.IsString)(),
     (0, class_validator_1.IsNotEmpty)(),
+    (0, class_validator_1.Length)(1, 50),
     __metadata("design:type", String)
 ], CreateCurrencyDto.prototype, "name", void 0);
 __decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Currency symbol',
+        example: '$',
+        maxLength: 5,
+        required: false
+    }),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.Length)(1, 5),
+    __metadata("design:type", String)
+], CreateCurrencyDto.prototype, "symbol", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Country name',
+        example: 'United States',
+        maxLength: 50,
+        required: false
+    }),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.Length)(1, 50),
+    __metadata("design:type", String)
+], CreateCurrencyDto.prototype, "country", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Number of decimal places',
+        example: 2,
+        default: 2,
+        required: false
+    }),
+    (0, class_validator_1.IsNumber)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", Number)
+], CreateCurrencyDto.prototype, "decimals", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Whether this is a strong currency',
+        example: true
+    }),
+    (0, class_validator_1.IsBoolean)(),
+    (0, class_validator_1.IsNotEmpty)(),
+    __metadata("design:type", Boolean)
+], CreateCurrencyDto.prototype, "isStrongCurrency", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'ID of the user creating this currency',
+        example: 1
+    }),
     (0, class_validator_1.IsNumber)(),
     (0, class_validator_1.IsNotEmpty)(),
     __metadata("design:type", Number)
-], CreateCurrencyDto.prototype, "exchange_rate_to_usd", void 0);
+], CreateCurrencyDto.prototype, "createdBy", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Currency status',
+        example: 'activo',
+        enum: ['activo', 'inactivo'],
+        default: 'activo',
+        required: false
+    }),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsIn)(['activo', 'inactivo']),
+    __metadata("design:type", String)
+], CreateCurrencyDto.prototype, "status", void 0);
 //# sourceMappingURL=create-currency.dto.js.map

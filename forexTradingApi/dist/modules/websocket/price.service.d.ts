@@ -1,29 +1,28 @@
-import { PriceWebSocketGateway } from './websocket.gateway';
-interface FXPriceUpdate {
-    id: string;
-    currencyPair: string;
-    baseCurrency: string;
-    quoteCurrency: string;
-    bid: number;
-    mid: number;
-    offer: number;
-    spread: number;
-    timestamp: Date;
-    source: string;
-    marketHours: boolean;
-}
+import { Repository } from 'typeorm';
+import { PriceWebSocketGateway, FXPriceUpdate } from './websocket.gateway';
+import { Currency } from '../currencies/entities/currency.entity';
 export declare class PriceService {
+    private currencyRepository;
     private webSocketGateway;
     private readonly logger;
-    private readonly majorPairs;
     private currentPrices;
     private priceHistory;
-    constructor(webSocketGateway: PriceWebSocketGateway);
+    private availableCurrencies;
+    private availablePairs;
+    private isWebSocketReady;
+    constructor(currencyRepository: Repository<Currency>, webSocketGateway: PriceWebSocketGateway);
+    private initializeService;
+    loadAvailableCurrencies(): Promise<void>;
+    private generateCurrencyPairs;
+    private initializeFallbackPairs;
+    validateCurrencyPair(currencyPair: string): Promise<boolean>;
     handlePriceUpdates(): void;
+    logSystemStatus(): void;
     getCurrentPrice(currencyPair: string): FXPriceUpdate | null;
     getAllCurrentPrices(): FXPriceUpdate[];
     getPriceHistory(currencyPair: string, limit?: number): FXPriceUpdate[];
     getAvailablePairs(): string[];
+    getAvailableCurrencies(): Currency[];
     isMarketOpen(): boolean;
     getMarketStatus(): {
         isOpen: boolean;
@@ -40,4 +39,3 @@ export declare class PriceService {
     private getNextMarketOpen;
     private getNextMarketClose;
 }
-export {};

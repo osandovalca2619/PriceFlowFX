@@ -15,11 +15,14 @@ const config_1 = require("@nestjs/config");
 const typeorm_1 = require("@nestjs/typeorm");
 const core_1 = require("@nestjs/core");
 const throttler_1 = require("@nestjs/throttler");
+const schedule_1 = require("@nestjs/schedule");
 const common_module_1 = require("./modules/common/common.module");
 const auth_module_1 = require("./modules/auth/auth.module");
 const users_module_1 = require("./modules/users/users.module");
 const products_module_1 = require("./modules/products/products.module");
 const transactions_module_1 = require("./modules/transactions/transactions.module");
+const currencies_module_1 = require("./modules/currencies/currencies.module");
+const websocket_module_1 = require("./modules/websocket/websocket.module");
 const database_config_1 = require("./config/database.config");
 let AppModule = class AppModule {
     configService;
@@ -29,7 +32,7 @@ let AppModule = class AppModule {
     }
     validateEnvironment() {
         const requiredEnvVars = [
-            'SUPABASE_DB_PASSWORD',
+            'DATABASE_URL',
             'JWT_SECRET',
         ];
         const missingVars = requiredEnvVars.filter((varName) => !this.configService.get(varName));
@@ -40,6 +43,7 @@ let AppModule = class AppModule {
         if (jwtSecret && jwtSecret.length < 32) {
             throw new Error('JWT_SECRET must be at least 32 characters long');
         }
+        console.log('✅ Environment variables validated successfully');
     }
 };
 exports.AppModule = AppModule;
@@ -54,6 +58,7 @@ exports.AppModule = AppModule = __decorate([
                     abortEarly: true,
                 },
             }),
+            schedule_1.ScheduleModule.forRoot(),
             throttler_1.ThrottlerModule.forRoot([
                 {
                     name: 'short',
@@ -81,6 +86,8 @@ exports.AppModule = AppModule = __decorate([
             users_module_1.UsersModule,
             products_module_1.ProductsModule,
             transactions_module_1.TransactionsModule,
+            currencies_module_1.CurrenciesModule,
+            websocket_module_1.WebSocketModule,
         ],
         providers: [
             {
