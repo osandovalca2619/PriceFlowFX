@@ -24,6 +24,11 @@ const transactions_module_1 = require("./modules/transactions/transactions.modul
 const currencies_module_1 = require("./modules/currencies/currencies.module");
 const websocket_module_1 = require("./modules/websocket/websocket.module");
 const health_module_1 = require("./modules/health/health.module");
+const clients_module_1 = require("./modules/clients/clients.module");
+const books_module_1 = require("./modules/books/books.module");
+const operations_module_1 = require("./modules/operations/operations.module");
+const spreads_module_1 = require("./modules/spreads/spreads.module");
+const catalogs_module_1 = require("./modules/catalogs/catalogs.module");
 const database_config_1 = require("./config/database.config");
 let AppModule = class AppModule {
     configService;
@@ -90,6 +95,11 @@ exports.AppModule = AppModule = __decorate([
             currencies_module_1.CurrenciesModule,
             websocket_module_1.WebSocketModule,
             health_module_1.HealthModule,
+            clients_module_1.ClientsModule,
+            books_module_1.BooksModule,
+            operations_module_1.OperationsModule,
+            spreads_module_1.SpreadsModule,
+            catalogs_module_1.CatalogsModule,
         ],
         providers: [
             {
