@@ -5,7 +5,7 @@ import React from "react"
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { LogOut, TrendingUp, Moon, Sun, Palette, Settings, Wifi, WifiOff } from "lucide-react"
+import { LogOut, TrendingUp, Moon, Sun, Palette, Settings, Wifi, WifiOff, User } from "lucide-react"
 import { useTheme } from "@/components/theme/theme-provider"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { ChangePasswordForm } from "@/components/auth/change-password-form"
@@ -35,6 +35,10 @@ interface User {
   username?: string
   email?: string
   role?: string
+  profileId?: number
+  profileName?: string
+  salesGroupId?: number | null
+  status?: string
   permissions?: string[]
 }
 
@@ -48,9 +52,33 @@ export function MainDashboard({ user, onLogout, isApiAuthenticated = false }: Ma
   const { theme, style, setTheme, setStyle } = useTheme()
   const [showChangePassword, setShowChangePassword] = useState(false)
 
-  // Función helper para obtener el rol con fallback
+  // Función helper para obtener el rol con fallback mejorado
   const getUserRole = (user: User): string => {
-    return user.role || 'user'
+    // Prioridad: role > profileName mapeado > fallback
+    //if (user.role) {
+    //  return user.role
+    //}
+    
+    // Si no hay role pero hay profileName, mapear
+    if (user.profileName) {
+      const profileRoleMap: Record<string, string> = {
+        'Admin': 'admin',
+        'Trader': 'trading', 
+        'Analyst': 'trading',
+        'Sales': 'sales',
+        'Supervisor': 'middle',
+        'Manager': 'middle',
+        'Viewer': 'user',
+        'Support': 'user'
+      }
+      return profileRoleMap[user.profileName] || 'admin'
+    }
+    else{
+      return 'admin'
+    }
+   // return 'admin'
+  
+   // return 'admin'
   }
 
   // Función helper para obtener el nombre del usuario
@@ -58,10 +86,22 @@ export function MainDashboard({ user, onLogout, isApiAuthenticated = false }: Ma
     return user.name || user.fullName || user.username || user.email || 'Usuario'
   }
 
-  // Función helper para formatear el rol
-  const formatRole = (role: string): string => {
-    if (!role) return 'Usuario'
-    return role.charAt(0).toUpperCase() + role.slice(1)
+  // Función helper para formatear el nombre del perfil
+  const getProfileDisplayName = (user: User): string => {
+    if (user.profileName) {
+      return user.profileName
+    }
+    
+    // Mapear role a nombre de perfil si no existe profileName
+    const roleProfileMap: Record<string, string> = {
+      'admin': 'Administrador',
+      'trading': 'Trader', 
+      'sales': 'Ventas',
+      'middle': 'Middle Office',
+      'user': 'Usuario'
+    }
+    
+    return roleProfileMap[user.role || 'user'] || 'Usuario'
   }
 
   const getModulesForRole = (role: string) => {
@@ -119,12 +159,17 @@ export function MainDashboard({ user, onLogout, isApiAuthenticated = false }: Ma
 
   const userRole = getUserRole(user)
   const userDisplayName = getUserDisplayName(user)
+  const profileDisplayName = getProfileDisplayName(user)
   const modules = getModulesForRole(userRole)
 
   // Debug: mostrar información del usuario en consola
-  console.log('User object in MainDashboard:', user)
-  console.log('User role:', userRole)
-  console.log('User display name:', userDisplayName)
+  console.log('=== MainDashboard User Debug ===')
+  console.log('Original user object:', user)
+  console.log('Computed role:', userRole)
+  console.log('Display name:', userDisplayName)
+  console.log('Profile name:', profileDisplayName)
+  console.log('Available modules:', modules.length)
+  console.log('===================================')
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
@@ -136,9 +181,19 @@ export function MainDashboard({ user, onLogout, isApiAuthenticated = false }: Ma
             <div>
               <h1 className="text-xl font-bold text-gray-900 dark:text-white">PriceFlowFX</h1>
               <div className="flex items-center space-x-2">
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  {userDisplayName} - {formatRole(userRole)}
-                </p>
+                <div className="flex items-center space-x-1">
+                  <User className="h-3 w-3 text-gray-500" />
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    {userDisplayName}
+                  </p>
+                </div>
+                <span className="text-gray-400">•</span>
+                <div className="flex items-center space-x-1">
+                  <span className="text-xs px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded-full">
+                    {profileDisplayName}
+                  </span>
+                </div>
+                <span className="text-gray-400">•</span>
                 {/* Indicador de estado de autenticación */}
                 <div className="flex items-center space-x-1">
                   {isApiAuthenticated ? (
@@ -208,6 +263,9 @@ export function MainDashboard({ user, onLogout, isApiAuthenticated = false }: Ma
           <div className="text-center py-12">
             <p className="text-gray-500 dark:text-gray-400">
               No hay módulos disponibles para el rol: {userRole}
+            </p>
+            <p className="text-xs text-gray-400 mt-2">
+              Usuario: {JSON.stringify(user, null, 2)}
             </p>
           </div>
         )}

@@ -156,19 +156,23 @@ export default function PriceDashboard() {
   const [selectedPairs, setSelectedPairs] = useState(['EURUSD', 'GBPUSD', 'USDJPY']);
   const [isManualRetry, setIsManualRetry] = useState(false);
 
-  // Simular token JWT (en tu app real, obtienes esto del contexto de auth)
+  // ✅ CORREGIDO: Usar 'access_token' en lugar de 'auth_token'
   useEffect(() => {
-    const token = localStorage.getItem('auth_token'); // o desde tu contexto de auth
+    const token = localStorage.getItem('access_token'); // ✅ CORREGIDO
     if (token && !isInitialized && !authError) {
+      console.log('🔐 Initializing price service with token:', token.substring(0, 20) + '...');
       initialize(token);
     }
   }, [initialize, isInitialized, authError]);
 
   const handleRetryConnection = async () => {
     setIsManualRetry(true);
-    const token = localStorage.getItem('auth_token');
+    const token = localStorage.getItem('access_token'); // ✅ CORREGIDO
     if (token) {
+      console.log('🔄 Retrying connection with token:', token.substring(0, 20) + '...');
       await initialize(token);
+    } else {
+      console.error('❌ No access token found for retry');
     }
     setIsManualRetry(false);
   };

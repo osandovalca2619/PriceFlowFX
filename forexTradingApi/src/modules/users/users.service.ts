@@ -1,7 +1,9 @@
-import { Injectable, ConflictException, NotFoundException } from '@nestjs/common';
+// forexTradingApi/src/modules/users/users.service.ts
+import { Injectable, ConflictException, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from './entities/user.entity';
+import { UserProfile } from './entities/user-profile.entity';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { HashService } from '../common/services/hash.service';
@@ -11,10 +13,21 @@ export class UsersService {
   constructor(
     @InjectRepository(User)
     private usersRepository: Repository<User>,
-    private hashService: HashService, // Inyectar HashService
+    @InjectRepository(UserProfile)
+    private userProfileRepository: Repository<UserProfile>,
+    private hashService: HashService,
   ) {}
 
   async create(createUserDto: CreateUserDto): Promise<User> {
+    // Verificar que el perfil existe
+    const profile = await this.userProfileRepository.findOne({
+      where: { id: createUserDto.profileId }
+    });
+
+    if (!profile) {
+      throw new BadRequestException(`Profile with ID ${createUserDto.profileId} not found`);
+    }
+
     // Check if username already exists
     const existingUser = await this.findByUsername(createUserDto.username);
     if (existingUser) {
@@ -39,16 +52,46 @@ export class UsersService {
 
   async findAll(): Promise<User[]> {
     return this.usersRepository.find({
-      select: ['id', 'username', 'fullName', 'profileId', 'salesGroupId', 'status', 'createdAt', 'modifiedAt'],
-      // ✅ REMOVIDO: relations: ['profile', 'salesGroup'] - No existen estas relaciones
+      relations: ['profile'], // ✅ AGREGADO: Incluir relación con perfil
+      select: {
+        id: true,
+        username: true,
+        fullName: true,
+        profileId: true,
+        salesGroupId: true,
+        status: true,
+        createdAt: true,
+        modifiedAt: true,
+        profile: {
+          id: true,
+          name: true,
+          description: true,
+        }
+      }
     });
   }
 
   async findOne(id: number): Promise<User> {
     const user = await this.usersRepository.findOne({ 
       where: { id },
-      select: ['id', 'username', 'fullName', 'profileId', 'salesGroupId', 'status', 'createdBy', 'createdAt', 'modifiedBy', 'modifiedAt'],
-      // ✅ REMOVIDO: relations: ['profile', 'salesGroup'] - No existen estas relaciones
+      relations: ['profile'], // ✅ AGREGADO: Incluir relación con perfil
+      select: {
+        id: true,
+        username: true,
+        fullName: true,
+        profileId: true,
+        salesGroupId: true,
+        status: true,
+        createdBy: true,
+        createdAt: true,
+        modifiedBy: true,
+        modifiedAt: true,
+        profile: {
+          id: true,
+          name: true,
+          description: true,
+        }
+      }
     });
     
     if (!user) {
@@ -61,48 +104,142 @@ export class UsersService {
   async findByUsername(username: string): Promise<User | null> {
     return this.usersRepository.findOne({ 
       where: { username },
-      select: ['id', 'username', 'fullName', 'profileId', 'salesGroupId', 'status', 'createdAt', 'modifiedAt'],
+      relations: ['profile'], // ✅ AGREGADO: Incluir relación con perfil
+      select: {
+        id: true,
+        username: true,
+        fullName: true,
+        profileId: true,
+        salesGroupId: true,
+        status: true,
+        createdAt: true,
+        modifiedAt: true,
+        profile: {
+          id: true,
+          name: true,
+          description: true,
+        }
+      }
     });
   }
 
   async findByUsernameWithPassword(username: string): Promise<User | null> {
     return this.usersRepository.findOne({ 
       where: { username },
-      select: ['id', 'username', 'fullName', 'profileId', 'salesGroupId', 'status', 'password', 'createdAt', 'modifiedAt'],
+      relations: ['profile'], // ✅ AGREGADO: Incluir relación con perfil
+      select: {
+        id: true,
+        username: true,
+        fullName: true,
+        profileId: true,
+        salesGroupId: true,
+        status: true,
+        password: true,
+        createdAt: true,
+        modifiedAt: true,
+        profile: {
+          id: true,
+          name: true,
+          description: true,
+        }
+      }
     });
   }
 
-  // ✅ MÉTODO FALTANTE - Agregado aquí
   async findByIdWithPassword(id: number): Promise<User | null> {
     return this.usersRepository.findOne({ 
       where: { id },
-      select: ['id', 'username', 'fullName', 'profileId', 'salesGroupId', 'status', 'password', 'createdAt', 'modifiedAt'],
+      relations: ['profile'], // ✅ AGREGADO: Incluir relación con perfil
+      select: {
+        id: true,
+        username: true,
+        fullName: true,
+        profileId: true,
+        salesGroupId: true,
+        status: true,
+        password: true,
+        createdAt: true,
+        modifiedAt: true,
+        profile: {
+          id: true,
+          name: true,
+          description: true,
+        }
+      }
     });
   }
 
   async findActiveUsers(): Promise<User[]> {
     return this.usersRepository.find({
       where: { status: 'activo' },
-      select: ['id', 'username', 'fullName', 'profileId', 'salesGroupId', 'status', 'createdAt'],
+      relations: ['profile'], // ✅ AGREGADO: Incluir relación con perfil
+      select: {
+        id: true,
+        username: true,
+        fullName: true,
+        profileId: true,
+        salesGroupId: true,
+        status: true,
+        createdAt: true,
+        profile: {
+          id: true,
+          name: true,
+          description: true,
+        }
+      }
     });
   }
 
   async findByProfileId(profileId: number): Promise<User[]> {
     return this.usersRepository.find({
       where: { profileId },
-      select: ['id', 'username', 'fullName', 'status', 'createdAt'],
+      relations: ['profile'], // ✅ AGREGADO: Incluir relación con perfil
+      select: {
+        id: true,
+        username: true,
+        fullName: true,
+        status: true,
+        createdAt: true,
+        profile: {
+          id: true,
+          name: true,
+          description: true,
+        }
+      }
     });
   }
 
   async findBySalesGroupId(salesGroupId: number): Promise<User[]> {
     return this.usersRepository.find({
       where: { salesGroupId },
-      select: ['id', 'username', 'fullName', 'status', 'createdAt'],
+      relations: ['profile'], // ✅ AGREGADO: Incluir relación con perfil
+      select: {
+        id: true,
+        username: true,
+        fullName: true,
+        status: true,
+        createdAt: true,
+        profile: {
+          id: true,
+          name: true,
+          description: true,
+        }
+      }
     });
   }
 
   async update(id: number, updateUserDto: UpdateUserDto, modifiedBy: number): Promise<User> {
     const user = await this.findOne(id);
+    
+    // Verificar nuevo perfil si se está cambiando
+    if (updateUserDto.profileId && updateUserDto.profileId !== user.profileId) {
+      const profile = await this.userProfileRepository.findOne({
+        where: { id: updateUserDto.profileId }
+      });
+      if (!profile) {
+        throw new BadRequestException(`Profile with ID ${updateUserDto.profileId} not found`);
+      }
+    }
     
     // If password is being updated, hash it
     if (updateUserDto.password) {
@@ -126,7 +263,6 @@ export class UsersService {
     return this.findOne(id);
   }
 
-  // ✅ MÉTODO NUEVO - Para cambio de contraseña específico
   async updatePassword(id: number, newPassword: string, modifiedBy: number): Promise<void> {
     const hashedPassword = await this.hashService.hashPassword(newPassword);
     
@@ -162,8 +298,18 @@ export class UsersService {
     await this.usersRepository.remove(user);
   }
 
-  // ✅ MÉTODO DEPRECATED - Mantener por compatibilidad, pero usar HashService
   async validatePassword(plainTextPassword: string, hashedPassword: string): Promise<boolean> {
     return this.hashService.comparePassword(plainTextPassword, hashedPassword);
+  }
+
+  // ✅ NUEVOS MÉTODOS PARA PERFILES
+  async getAllProfiles(): Promise<UserProfile[]> {
+    return this.userProfileRepository.find({
+      order: { name: 'ASC' }
+    });
+  }
+
+  async getProfileById(id: number): Promise<UserProfile | null> {
+    return this.userProfileRepository.findOne({ where: { id } });
   }
 }

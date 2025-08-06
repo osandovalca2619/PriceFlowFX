@@ -1,5 +1,7 @@
+// forexTradingApi/src/modules/users/entities/user.entity.ts
 import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, ManyToOne, JoinColumn, OneToMany } from 'typeorm';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { UserProfile } from './user-profile.entity';
 
 @Entity('app_user')
 export class User {
@@ -76,7 +78,6 @@ export class User {
   @UpdateDateColumn({ name: 'modified_at' })
   modifiedAt: Date | null;
 
-  // Solo si eliges la Opción 1 (agregar password a la tabla)
   @ApiPropertyOptional({
     description: 'User password (hashed)',
     example: '$2b$10$...',
@@ -84,27 +85,51 @@ export class User {
   @Column({ type: 'varchar', length: 255, select: false, nullable: true })
   password?: string;
 
-  // Relación con transacciones
+  // ✅ RELACIÓN CON USER PROFILE
+  @ApiProperty({
+    description: 'User profile information',
+    type: () => UserProfile,
+  })
+  @ManyToOne(() => UserProfile, profile => profile.users, {
+    eager: false,
+    nullable: false
+  })
+  @JoinColumn({ name: 'profile_id' })
+  profile: UserProfile;
+
+  // ✅ RELACIONES SELF-REFERENCING CORREGIDAS
+  // Estas relaciones son opcionales y no necesitan eager loading
+  @ApiPropertyOptional({
+    description: 'User who created this record',
+    type: () => User,
+  })
+  @ManyToOne(() => User, {
+    nullable: true, // ✅ AGREGADO: nullable para evitar circular dependency
+    eager: false,   // ✅ AGREGADO: no cargar automáticamente
+  })
+  @JoinColumn({ name: 'created_by' })
+  creator?: User;
+
+  @ApiPropertyOptional({
+    description: 'User who last modified this record',
+    type: () => User,
+  })
+  @ManyToOne(() => User, {
+    nullable: true, // ✅ YA ERA nullable
+    eager: false,   // ✅ AGREGADO: no cargar automáticamente
+  })
+  @JoinColumn({ name: 'modified_by' })
+  modifier?: User;
+
+  // Relación con transacciones (mantener como estaba)
   @OneToMany(() => Transaction, (transaction) => transaction.user)
   transactions: Transaction[];
 
-  // Relaciones (opcional, puedes definirlas más tarde)
-  // @ManyToOne(() => UserProfile)
-  // @JoinColumn({ name: 'profile_id' })
-  // profile: UserProfile;
-
+  // Relaciones opcionales para el futuro
   // @ManyToOne(() => SalesGroup)
   // @JoinColumn({ name: 'sales_group_id' })
   // salesGroup: SalesGroup;
-
-  // @ManyToOne(() => User)
-  // @JoinColumn({ name: 'created_by' })
-  // creator: User;
-
-  // @ManyToOne(() => User)
-  // @JoinColumn({ name: 'modified_by' })
-  // modifier: User;
 }
 
-// Import circular para evitar problemas de dependencias
+// Import circular para evitar problemas de dependencias (mantener al final)
 import { Transaction } from '../../transactions/entities/transaction.entity';

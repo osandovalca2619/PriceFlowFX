@@ -3,7 +3,7 @@ import type { Metadata } from 'next'
 import { GeistSans } from 'geist/font/sans'
 import { GeistMono } from 'geist/font/mono'
 import './globals.css'
-import { AuthProvider } from '@/contexts/AuthContext'
+// ✅ IMPORTANTE: No importar AuthProvider aquí si es "use client"
 
 export const metadata: Metadata = {
   title: 'PriceFlowFX - Forex Trading Platform',
@@ -28,9 +28,8 @@ html {
         `}</style>
       </head>
       <body>
-        <AuthProvider>
-          {children}
-        </AuthProvider>
+        {/* ✅ NO usar AuthProvider aquí - se usa en page.tsx */}
+        {children}
       </body>
     </html>
   )
