@@ -182,9 +182,6 @@ let PriceWebSocketGateway = PriceWebSocketGateway_1 = class PriceWebSocketGatewa
                 data: priceUpdate,
                 timestamp: new Date()
             });
-            if (subscriberCount > 0) {
-                this.logger.debug(`📊 ${priceUpdate.currencyPair}: ${subscriberCount} subscribers`);
-            }
         }
         catch (error) {
             this.logger.error(`❌ Error broadcasting ${priceUpdate.currencyPair}:`, error.message);

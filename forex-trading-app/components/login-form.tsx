@@ -17,7 +17,7 @@ interface LoginFormProps {
 
 export function LoginForm({ onLogin }: LoginFormProps) {
   const { login, error: authError, isLoading, clearError } = useAuth()
-  const [username, setUsername] = useState("")  // Cambiado de email a username
+  const [username, setUsername] = useState("")
   const [password, setPassword] = useState("")
   const [localError, setLocalError] = useState("")
   const [showFallback, setShowFallback] = useState(false)
@@ -34,68 +34,117 @@ export function LoginForm({ onLogin }: LoginFormProps) {
     }
 
     try {
-      // Intentar login con la API usando username
+      // Intentar login con la API
       await login({ username, password })
       
-      // Si el login es exitoso, el AuthContext ya maneja el estado del usuario
-      onLogin({ username })
+      // Si el login es exitoso, el AuthContext ya maneja la conversión del usuario
+      console.log('Login successful, calling onLogin...')
+      onLogin({ username }) // El usuario real se maneja en el AuthContext
       
     } catch (error: any) {
       console.error("API Login failed:", error)
-      // Si falla la API, mostrar opción de fallback
       setShowFallback(true)
     }
   }
 
   const handleFallbackLogin = () => {
-    // Sistema de fallback para desarrollo/demo
-    // Mapear usernames a usuarios locales
-    const usernameToEmailMap: Record<string, string> = {
-      "trader01": "trading@forex.com",
-      "sales01": "sales@forex.com", 
-      "manager01": "middle@forex.com",
-      "admin": "admin@forex.com"
-    }
-
-    const users = {
+    // Sistema de fallback mejorado que mantiene consistencia con la API
+    const usernameToUserMap: Record<string, any> = {
+      "trader01": {
+        id: 1,
+        name: "Juan Trading",
+        fullName: "Juan Trading",
+        username: "trader01",
+        email: "trading@forex.com",
+        role: "trading",
+        profileId: 2,
+        profileName: "Trader",
+        permissions: ["position-mx", "spread-trading", "operations-query"],
+      },
+      "sales01": {
+        id: 2,
+        name: "María Sales", 
+        fullName: "María Sales",
+        username: "sales01",
+        email: "sales@forex.com",
+        role: "sales",
+        profileId: 5,
+        profileName: "Sales",
+        permissions: ["prices", "operations-query", "spread-sales", "spread-exception"],
+      },
+      "manager01": {
+        id: 3,
+        name: "Carlos Middle Office",
+        fullName: "Carlos Middle Office",
+        username: "manager01",
+        email: "middle@forex.com", 
+        role: "middle",
+        profileId: 6,
+        profileName: "Manager",
+        permissions: ["operations-query", "clients", "holidays", "books", "currencies", "users"],
+      },
+      "admin": {
+        id: 4,
+        name: "Ana Administrador",
+        fullName: "Ana Administrador",
+        username: "admin",
+        email: "admin@forex.com",
+        role: "admin",
+        profileId: 1,
+        profileName: "Admin",
+        permissions: ["all"],
+      },
+      // También permitir login por email (compatibilidad hacia atrás)
       "trading@forex.com": {
         id: 1,
         name: "Juan Trading",
+        fullName: "Juan Trading",
+        username: "trader01",
         email: "trading@forex.com",
         role: "trading",
+        profileId: 2,
+        profileName: "Trader",
         permissions: ["position-mx", "spread-trading", "operations-query"],
       },
       "sales@forex.com": {
         id: 2,
         name: "María Sales", 
+        fullName: "María Sales",
+        username: "sales01",
         email: "sales@forex.com",
         role: "sales",
+        profileId: 5,
+        profileName: "Sales",
         permissions: ["prices", "operations-query", "spread-sales", "spread-exception"],
       },
       "middle@forex.com": {
         id: 3,
         name: "Carlos Middle Office",
+        fullName: "Carlos Middle Office",
+        username: "manager01",
         email: "middle@forex.com", 
         role: "middle",
+        profileId: 6,
+        profileName: "Manager",
         permissions: ["operations-query", "clients", "holidays", "books", "currencies", "users"],
       },
       "admin@forex.com": {
         id: 4,
         name: "Ana Administrador",
+        fullName: "Ana Administrador",
+        username: "admin",
         email: "admin@forex.com",
-        role: "admin", 
+        role: "admin",
+        profileId: 1,
+        profileName: "Admin",
         permissions: ["all"],
       },
     }
 
-    // Buscar por username o email
-    const emailFromUsername = usernameToEmailMap[username]
-    const userByEmail = emailFromUsername ? users[emailFromUsername as keyof typeof users] : null
-    const userByDirectEmail = users[username as keyof typeof users]
-    
-    const user = userByEmail || userByDirectEmail
+    const user = usernameToUserMap[username]
 
     if (user && password === "123456") {
+      console.log('Fallback login successful for user:', user)
       onLogin(user)
       localStorage.setItem("forex-user", JSON.stringify(user))
     } else {
@@ -202,8 +251,8 @@ export function LoginForm({ onLogin }: LoginFormProps) {
             
             <p className="font-medium">Credenciales de prueba (contraseña: 123456):</p>
             <div className="mt-2 space-y-1 text-xs">
-              <p><strong>API:</strong> trader01, sales01, manager01, admin</p>
-              <p><strong>Local:</strong> trading@forex.com, sales@forex.com, middle@forex.com, admin@forex.com</p>
+              <p><strong>API/Local:</strong> trader01, sales01, manager01, admin</p>
+              <p><strong>Perfiles:</strong> Trader → trading, Sales → sales, Manager → middle, Admin → admin</p>
             </div>
           </div>
         </CardContent>

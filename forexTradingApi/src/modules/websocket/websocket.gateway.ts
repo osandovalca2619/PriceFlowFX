@@ -262,9 +262,9 @@ export class PriceWebSocketGateway implements OnGatewayInit, OnGatewayConnection
       });
 
       // Log menos verboso
-      if (subscriberCount > 0) {
-        this.logger.debug(`📊 ${priceUpdate.currencyPair}: ${subscriberCount} subscribers`);
-      }
+      //if (subscriberCount > 0) {
+      //  this.logger.debug(`📊 ${priceUpdate.currencyPair}: ${subscriberCount} subscribers`);
+      //}
 
     } catch (error) {
       this.logger.error(`❌ Error broadcasting ${priceUpdate.currencyPair}:`, error.message);

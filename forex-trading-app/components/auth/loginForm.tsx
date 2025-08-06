@@ -33,7 +33,7 @@ export function LoginForm({ onLogin }: LoginFormProps) {
     try {
       // Intentar login con la API real
       const response = await authService.login({ username, password })
-      
+      console.log('entro en loginForm.tsx')
       // Mapear la respuesta de la API al formato esperado por tu app
       const userData = {
         id: response.user.id,

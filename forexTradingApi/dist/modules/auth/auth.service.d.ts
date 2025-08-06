@@ -7,6 +7,7 @@ export interface AuthUser {
     username: string;
     fullName: string;
     profileId: number;
+    profileName: string;
     salesGroupId: number | null;
     status: string;
 }

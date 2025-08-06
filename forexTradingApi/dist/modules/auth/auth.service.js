@@ -39,8 +39,11 @@ let AuthService = class AuthService {
         }
         const isPasswordValid = await this.hashService.comparePassword(password, user.password);
         if (isPasswordValid) {
-            const { password: _, ...result } = user;
-            return result;
+            const { password: _, ...userWithoutPassword } = user;
+            return {
+                ...userWithoutPassword,
+                profileName: user.profile?.name || 'Unknown Profile'
+            };
         }
         return null;
     }
@@ -53,6 +56,7 @@ let AuthService = class AuthService {
             username: user.username,
             sub: user.id,
             profileId: user.profileId,
+            profileName: user.profileName,
             salesGroupId: user.salesGroupId
         };
         const accessToken = this.jwtService.sign(payload);
@@ -63,6 +67,7 @@ let AuthService = class AuthService {
                 username: user.username,
                 fullName: user.fullName,
                 profileId: user.profileId,
+                profileName: user.profileName,
                 salesGroupId: user.salesGroupId,
                 status: user.status,
             },
@@ -84,8 +89,11 @@ let AuthService = class AuthService {
             ...createUserDto,
             createdBy,
         });
-        const { password: _, ...userWithoutPassword } = newUser;
-        return userWithoutPassword;
+        const userWithProfile = await this.usersService.findOne(newUser.id);
+        return {
+            ...userWithProfile,
+            profileName: userWithProfile.profile?.name || 'Unknown Profile'
+        };
     }
     async validateUserById(userId) {
         const user = await this.usersService.findOne(userId);
@@ -95,7 +103,10 @@ let AuthService = class AuthService {
         if (user.status !== 'activo') {
             throw new common_1.UnauthorizedException('Usuario inactivo');
         }
-        return user;
+        return {
+            ...user,
+            profileName: user.profile?.name || 'Unknown Profile'
+        };
     }
     async getProfile(userId) {
         const user = await this.usersService.findOne(userId);
@@ -107,6 +118,7 @@ let AuthService = class AuthService {
             username: user.username,
             fullName: user.fullName,
             profileId: user.profileId,
+            profileName: user.profile?.name || 'Unknown Profile',
             salesGroupId: user.salesGroupId,
             status: user.status,
         };

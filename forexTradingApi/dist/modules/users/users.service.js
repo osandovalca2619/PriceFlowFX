@@ -17,15 +17,24 @@ const common_1 = require("@nestjs/common");
 const typeorm_1 = require("@nestjs/typeorm");
 const typeorm_2 = require("typeorm");
 const user_entity_1 = require("./entities/user.entity");
+const user_profile_entity_1 = require("./entities/user-profile.entity");
 const hash_service_1 = require("../common/services/hash.service");
 let UsersService = class UsersService {
     usersRepository;
+    userProfileRepository;
     hashService;
-    constructor(usersRepository, hashService) {
+    constructor(usersRepository, userProfileRepository, hashService) {
         this.usersRepository = usersRepository;
+        this.userProfileRepository = userProfileRepository;
         this.hashService = hashService;
     }
     async create(createUserDto) {
+        const profile = await this.userProfileRepository.findOne({
+            where: { id: createUserDto.profileId }
+        });
+        if (!profile) {
+            throw new common_1.BadRequestException(`Profile with ID ${createUserDto.profileId} not found`);
+        }
         const existingUser = await this.findByUsername(createUserDto.username);
         if (existingUser) {
             throw new common_1.ConflictException('User with this username already exists');
@@ -43,13 +52,45 @@ let UsersService = class UsersService {
     }
     async findAll() {
         return this.usersRepository.find({
-            select: ['id', 'username', 'fullName', 'profileId', 'salesGroupId', 'status', 'createdAt', 'modifiedAt'],
+            relations: ['profile'],
+            select: {
+                id: true,
+                username: true,
+                fullName: true,
+                profileId: true,
+                salesGroupId: true,
+                status: true,
+                createdAt: true,
+                modifiedAt: true,
+                profile: {
+                    id: true,
+                    name: true,
+                    description: true,
+                }
+            }
         });
     }
     async findOne(id) {
         const user = await this.usersRepository.findOne({
             where: { id },
-            select: ['id', 'username', 'fullName', 'profileId', 'salesGroupId', 'status', 'createdBy', 'createdAt', 'modifiedBy', 'modifiedAt'],
+            relations: ['profile'],
+            select: {
+                id: true,
+                username: true,
+                fullName: true,
+                profileId: true,
+                salesGroupId: true,
+                status: true,
+                createdBy: true,
+                createdAt: true,
+                modifiedBy: true,
+                modifiedAt: true,
+                profile: {
+                    id: true,
+                    name: true,
+                    description: true,
+                }
+            }
         });
         if (!user) {
             throw new common_1.NotFoundException('User not found');
@@ -59,41 +100,134 @@ let UsersService = class UsersService {
     async findByUsername(username) {
         return this.usersRepository.findOne({
             where: { username },
-            select: ['id', 'username', 'fullName', 'profileId', 'salesGroupId', 'status', 'createdAt', 'modifiedAt'],
+            relations: ['profile'],
+            select: {
+                id: true,
+                username: true,
+                fullName: true,
+                profileId: true,
+                salesGroupId: true,
+                status: true,
+                createdAt: true,
+                modifiedAt: true,
+                profile: {
+                    id: true,
+                    name: true,
+                    description: true,
+                }
+            }
         });
     }
     async findByUsernameWithPassword(username) {
         return this.usersRepository.findOne({
             where: { username },
-            select: ['id', 'username', 'fullName', 'profileId', 'salesGroupId', 'status', 'password', 'createdAt', 'modifiedAt'],
+            relations: ['profile'],
+            select: {
+                id: true,
+                username: true,
+                fullName: true,
+                profileId: true,
+                salesGroupId: true,
+                status: true,
+                password: true,
+                createdAt: true,
+                modifiedAt: true,
+                profile: {
+                    id: true,
+                    name: true,
+                    description: true,
+                }
+            }
         });
     }
     async findByIdWithPassword(id) {
         return this.usersRepository.findOne({
             where: { id },
-            select: ['id', 'username', 'fullName', 'profileId', 'salesGroupId', 'status', 'password', 'createdAt', 'modifiedAt'],
+            relations: ['profile'],
+            select: {
+                id: true,
+                username: true,
+                fullName: true,
+                profileId: true,
+                salesGroupId: true,
+                status: true,
+                password: true,
+                createdAt: true,
+                modifiedAt: true,
+                profile: {
+                    id: true,
+                    name: true,
+                    description: true,
+                }
+            }
         });
     }
     async findActiveUsers() {
         return this.usersRepository.find({
             where: { status: 'activo' },
-            select: ['id', 'username', 'fullName', 'profileId', 'salesGroupId', 'status', 'createdAt'],
+            relations: ['profile'],
+            select: {
+                id: true,
+                username: true,
+                fullName: true,
+                profileId: true,
+                salesGroupId: true,
+                status: true,
+                createdAt: true,
+                profile: {
+                    id: true,
+                    name: true,
+                    description: true,
+                }
+            }
         });
     }
     async findByProfileId(profileId) {
         return this.usersRepository.find({
             where: { profileId },
-            select: ['id', 'username', 'fullName', 'status', 'createdAt'],
+            relations: ['profile'],
+            select: {
+                id: true,
+                username: true,
+                fullName: true,
+                status: true,
+                createdAt: true,
+                profile: {
+                    id: true,
+                    name: true,
+                    description: true,
+                }
+            }
         });
     }
     async findBySalesGroupId(salesGroupId) {
         return this.usersRepository.find({
             where: { salesGroupId },
-            select: ['id', 'username', 'fullName', 'status', 'createdAt'],
+            relations: ['profile'],
+            select: {
+                id: true,
+                username: true,
+                fullName: true,
+                status: true,
+                createdAt: true,
+                profile: {
+                    id: true,
+                    name: true,
+                    description: true,
+                }
+            }
         });
     }
     async update(id, updateUserDto, modifiedBy) {
         const user = await this.findOne(id);
+        if (updateUserDto.profileId && updateUserDto.profileId !== user.profileId) {
+            const profile = await this.userProfileRepository.findOne({
+                where: { id: updateUserDto.profileId }
+            });
+            if (!profile) {
+                throw new common_1.BadRequestException(`Profile with ID ${updateUserDto.profileId} not found`);
+            }
+        }
         if (updateUserDto.password) {
             updateUserDto.password = await this.hashService.hashPassword(updateUserDto.password);
         }
@@ -141,12 +275,22 @@ let UsersService = class UsersService {
     async validatePassword(plainTextPassword, hashedPassword) {
         return this.hashService.comparePassword(plainTextPassword, hashedPassword);
     }
+    async getAllProfiles() {
+        return this.userProfileRepository.find({
+            order: { name: 'ASC' }
+        });
+    }
+    async getProfileById(id) {
+        return this.userProfileRepository.findOne({ where: { id } });
+    }
 };
 exports.UsersService = UsersService;
 exports.UsersService = UsersService = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, typeorm_1.InjectRepository)(user_entity_1.User)),
+    __param(1, (0, typeorm_1.InjectRepository)(user_profile_entity_1.UserProfile)),
     __metadata("design:paramtypes", [typeorm_2.Repository,
+        typeorm_2.Repository,
         hash_service_1.HashService])
 ], UsersService);
 //# sourceMappingURL=users.service.js.map

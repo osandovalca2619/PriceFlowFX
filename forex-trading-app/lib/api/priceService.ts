@@ -51,7 +51,7 @@ class PriceService {
   private onServerStats: ((stats: ServerStats) => void)[] = [];
   private onError: ((error: any) => void)[] = [];
 
-  constructor(wsUrl: string = process.env.NEXT_PUBLIC_WS_URL || 'http://localhost:3000') {
+  constructor(wsUrl: string = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001') { // ✅ CORREGIDO: usar 3001
     this.wsUrl = wsUrl;
   }
 
@@ -91,12 +91,17 @@ class PriceService {
           throw new Error('Authentication token required');
         }
 
+        console.log('🔌 Connecting to:', `${this.wsUrl}/prices`); // ✅ AGREGADO: log para debug
+
         this.socket = io(`${this.wsUrl}/prices`, {
           auth: {
             token: this.authToken
           },
           transports: ['websocket'],
           timeout: 10000,
+          reconnection: true, // ✅ AGREGADO: reconexión automática
+          reconnectionDelay: 1000,
+          reconnectionAttempts: 5
         });
 
         this.setupEventListeners();
@@ -131,26 +136,22 @@ class PriceService {
 
     // Eventos de conexión
     this.socket.on('connection_status', (data: ConnectionStatus) => {
-      console.log('📡 Connection status:', data);
+      console.log('📡 Connection status:', data); // ✅ REDUCIDO: menos verboso
     });
 
     this.socket.on('disconnect', (reason) => {
       console.log('👋 Disconnected from WebSocket:', reason);
       this.notifyConnectionChange(false);
-      
-      if (reason === 'io server disconnect') {
-        // Reconexión manual requerida
-        this.scheduleReconnect();
-      }
     });
 
     // Eventos de precios
     this.socket.on('price_update', (data) => {
+      // ✅ REDUCIDO: remover log excesivo para price_update
       this.handlePriceUpdate(data);
     });
 
     this.socket.on('subscription_confirmed', (data) => {
-      console.log('✅ Subscription confirmed:', data);
+      console.log('✅ Subscription confirmed:', data.currencyPair); // ✅ REDUCIDO: solo mostrar par
     });
 
     this.socket.on('subscription_error', (data) => {
@@ -159,7 +160,7 @@ class PriceService {
     });
 
     this.socket.on('unsubscribe_confirmed', (data) => {
-      console.log('✅ Unsubscribe confirmed:', data);
+      console.log('✅ Unsubscribe confirmed:', data.currencyPair); // ✅ REDUCIDO
     });
 
     // Eventos del servidor
@@ -168,7 +169,8 @@ class PriceService {
     });
 
     this.socket.on('market_status', (data) => {
-      console.log('📊 Market status update:', data);
+      // ✅ REDUCIDO: solo log si es importante
+      console.debug('📊 Market status update:', data);
     });
 
     this.socket.on('server_error', (data) => {
@@ -181,9 +183,9 @@ class PriceService {
       this.notifyError(data);
     });
 
-    // Pong para keepalive
+    // ✅ REMOVIDO: Pong log para reducir spam
     this.socket.on('pong', (data) => {
-      console.debug('🏓 Pong received:', data);
+      // Silencioso - no es necesario loggear cada pong
     });
   }
 
@@ -227,6 +229,7 @@ class PriceService {
       this.subscriptions.set(currencyPair, []);
       // Enviar suscripción al servidor solo si es el primer suscriptor
       this.socket?.emit('subscribe_price', { currencyPair });
+      console.log(`📈 Subscribing to ${currencyPair}`); // ✅ Log solo cuando se suscribe
     }
 
     this.subscriptions.get(currencyPair)!.push(subscription);
@@ -251,6 +254,7 @@ class PriceService {
       // Si no quedan suscriptores, eliminar del mapa y desuscribir del servidor
       this.subscriptions.delete(currencyPair);
       this.socket?.emit('unsubscribe_price', { currencyPair });
+      console.log(`📉 Unsubscribed from ${currencyPair}`); // ✅ Log solo cuando se desuscribe
     } else {
       // Actualizar la lista de suscriptores
       this.subscriptions.set(currencyPair, filteredSubscribers);

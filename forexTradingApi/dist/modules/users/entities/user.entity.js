@@ -12,6 +12,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.User = void 0;
 const typeorm_1 = require("typeorm");
 const swagger_1 = require("@nestjs/swagger");
+const user_profile_entity_1 = require("./user-profile.entity");
 let User = class User {
     id;
     username;
@@ -24,6 +25,9 @@ let User = class User {
     modifiedBy;
     modifiedAt;
     password;
+    profile;
+    creator;
+    modifier;
     transactions;
 };
 exports.User = User;
@@ -118,6 +122,42 @@ __decorate([
     (0, typeorm_1.Column)({ type: 'varchar', length: 255, select: false, nullable: true }),
     __metadata("design:type", String)
 ], User.prototype, "password", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'User profile information',
+        type: () => user_profile_entity_1.UserProfile,
+    }),
+    (0, typeorm_1.ManyToOne)(() => user_profile_entity_1.UserProfile, profile => profile.users, {
+        eager: false,
+        nullable: false
+    }),
+    (0, typeorm_1.JoinColumn)({ name: 'profile_id' }),
+    __metadata("design:type", user_profile_entity_1.UserProfile)
+], User.prototype, "profile", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({
+        description: 'User who created this record',
+        type: () => User,
+    }),
+    (0, typeorm_1.ManyToOne)(() => User, {
+        nullable: true,
+        eager: false,
+    }),
+    (0, typeorm_1.JoinColumn)({ name: 'created_by' }),
+    __metadata("design:type", User)
+], User.prototype, "creator", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({
+        description: 'User who last modified this record',
+        type: () => User,
+    }),
+    (0, typeorm_1.ManyToOne)(() => User, {
+        nullable: true,
+        eager: false,
+    }),
+    (0, typeorm_1.JoinColumn)({ name: 'modified_by' }),
+    __metadata("design:type", User)
+], User.prototype, "modifier", void 0);
 __decorate([
     (0, typeorm_1.OneToMany)(() => transaction_entity_1.Transaction, (transaction) => transaction.user),
     __metadata("design:type", Array)

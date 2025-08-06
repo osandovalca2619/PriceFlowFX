@@ -1,12 +1,14 @@
 import { Repository } from 'typeorm';
 import { User } from './entities/user.entity';
+import { UserProfile } from './entities/user-profile.entity';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { HashService } from '../common/services/hash.service';
 export declare class UsersService {
     private usersRepository;
+    private userProfileRepository;
     private hashService;
-    constructor(usersRepository: Repository<User>, hashService: HashService);
+    constructor(usersRepository: Repository<User>, userProfileRepository: Repository<UserProfile>, hashService: HashService);
     create(createUserDto: CreateUserDto): Promise<User>;
     findAll(): Promise<User[]>;
     findOne(id: number): Promise<User>;
@@ -22,4 +24,6 @@ export declare class UsersService {
     activateUser(id: number, modifiedBy: number): Promise<User>;
     remove(id: number): Promise<void>;
     validatePassword(plainTextPassword: string, hashedPassword: string): Promise<boolean>;
+    getAllProfiles(): Promise<UserProfile[]>;
+    getProfileById(id: number): Promise<UserProfile | null>;
 }

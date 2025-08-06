@@ -1,3 +1,4 @@
+// forexTradingApi/src/modules/auth/auth.service.ts
 import { Injectable, UnauthorizedException, BadRequestException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { UsersService } from '../users/users.service';
@@ -9,6 +10,7 @@ export interface AuthUser {
   username: string;
   fullName: string;
   profileId: number;
+  profileName: string; // ✅ AGREGADO: Nombre del perfil
   salesGroupId: number | null;
   status: string;
 }
@@ -33,9 +35,10 @@ export class AuthService {
   async validateUser(username: string, password: string): Promise<AuthUser | null> {
     const user = await this.usersService.findByUsernameWithPassword(username);
     
-  console.log('👤 Usuario encontrado:', !!user);
-  console.log('🔐 Usuario tiene password:', !!user?.password);
-  console.log('📊 Usuario status:', user?.status);
+    console.log('👤 Usuario encontrado:', !!user);
+    console.log('🔐 Usuario tiene password:', !!user?.password);
+    console.log('📊 Usuario status:', user?.status);
+    
     if (!user) {
       return null;
     }
@@ -54,8 +57,11 @@ export class AuthService {
     const isPasswordValid = await this.hashService.comparePassword(password, user.password);
     
     if (isPasswordValid) {
-      const { password: _, ...result } = user;
-      return result as AuthUser;
+      const { password: _, ...userWithoutPassword } = user;
+      return {
+        ...userWithoutPassword,
+        profileName: user.profile?.name || 'Unknown Profile' // ✅ AGREGADO: Nombre del perfil
+      } as AuthUser;
     }
     
     return null;
@@ -75,6 +81,7 @@ export class AuthService {
       username: user.username, 
       sub: user.id,
       profileId: user.profileId,
+      profileName: user.profileName, // ✅ AGREGADO: Incluir en JWT
       salesGroupId: user.salesGroupId 
     };
     
@@ -87,10 +94,11 @@ export class AuthService {
         username: user.username,
         fullName: user.fullName,
         profileId: user.profileId,
+        profileName: user.profileName, // ✅ AGREGADO: Nombre del perfil
         salesGroupId: user.salesGroupId,
         status: user.status,
       },
-      expires_in: '24h', // Debería venir de la configuración
+      expires_in: '24h',
     };
   }
 
@@ -117,9 +125,13 @@ export class AuthService {
       createdBy,
     });
 
-    // Retornar usuario sin password
-    const { password: _, ...userWithoutPassword } = newUser;
-    return userWithoutPassword as AuthUser;
+    // Obtener el usuario con el perfil para retornar el nombre
+    const userWithProfile = await this.usersService.findOne(newUser.id);
+
+    return {
+      ...userWithProfile,
+      profileName: userWithProfile.profile?.name || 'Unknown Profile'
+    } as AuthUser;
   }
 
   /**
@@ -137,7 +149,10 @@ export class AuthService {
       throw new UnauthorizedException('Usuario inactivo');
     }
 
-    return user as AuthUser;
+    return {
+      ...user,
+      profileName: user.profile?.name || 'Unknown Profile' // ✅ AGREGADO: Nombre del perfil
+    } as AuthUser;
   }
 
   /**
@@ -155,6 +170,7 @@ export class AuthService {
       username: user.username,
       fullName: user.fullName,
       profileId: user.profileId,
+      profileName: user.profile?.name || 'Unknown Profile', // ✅ AGREGADO: Nombre del perfil
       salesGroupId: user.salesGroupId,
       status: user.status,
     };
