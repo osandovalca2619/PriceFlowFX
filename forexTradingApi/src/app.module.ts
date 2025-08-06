@@ -15,6 +15,13 @@ import { CurrenciesModule } from './modules/currencies/currencies.module'; // ¡
 import { WebSocketModule } from './modules/websocket/websocket.module';
 import { HealthModule } from './modules/health/health.module'; // ✅ AGREGADO
 
+
+import { ClientsModule } from './modules/clients/clients.module';
+import { BooksModule } from './modules/books/books.module';
+import { OperationsModule } from './modules/operations/operations.module';
+import { SpreadsModule } from './modules/spreads/spreads.module';
+import { CatalogsModule } from './modules/catalogs/catalogs.module';
+
 // Database Configuration
 import { getDatabaseConfig } from './config/database.config';
 
@@ -68,6 +75,13 @@ import { getDatabaseConfig } from './config/database.config';
     CurrenciesModule,    // ✅ Gestión de divisas (AGREGADO)
     WebSocketModule,     // ✅ WebSocket para precios en tiempo real
     HealthModule,        // ✅ AGREGADO: Health checks
+
+    // 🆕 NUEVOS MÓDULOS
+    ClientsModule,
+    BooksModule,
+    OperationsModule,
+    SpreadsModule,
+    CatalogsModule,
   ],
   
   providers: [
