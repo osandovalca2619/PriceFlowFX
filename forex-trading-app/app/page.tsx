@@ -3,7 +3,8 @@
 
 import { useState, useEffect } from "react"
 import { LoginForm } from "@/components/login-form"
-import { MainDashboard } from "@/components/dashboard/main-dashboard"
+//import { MainDashboard } from "@/components/dashboard/main-dashboard"
+import { MainDashboardV2 } from '@/components/dashboard/main-dashboard-v2'
 import { ThemeProvider } from "@/components/theme/theme-provider"
 import { AuthProvider, useAuth } from "@/contexts/AuthContext"
 
@@ -119,7 +120,7 @@ function AppContent() {
       {!isCurrentlyAuthenticated || !currentUser ? (
         <LoginForm onLogin={handleLogin} />
       ) : (
-        <MainDashboard 
+        <MainDashboardV2 
           user={currentUser} 
           onLogout={handleLogout}
           isApiAuthenticated={isAuthenticated} // Usar isAuthenticated en lugar de isApiAuthenticated

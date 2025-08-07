@@ -3,7 +3,7 @@ import {
   BarChart3, DollarSign, Users, Settings,
   TrendingUp, FileText, PieChart, Shield,
   Calendar, BookOpen, Coins, UserCheck,
-  Activity, AlertCircle
+  Activity, AlertCircle, Calculator
 } from "lucide-react";
 import { NavigationGroup, User } from './types';
 
@@ -62,6 +62,11 @@ export const NAVIGATION_CONFIG: Record<string, NavigationGroup[]> = {
       label: "Sales",
       icon: DollarSign,
       items: [
+        {
+          id: 'quotation-sales',
+          label: 'Cotización',
+          icon: Calculator
+        },
         { 
           id: "prices-sales", 
           label: "Cotizaciones", 
@@ -200,6 +205,11 @@ export const NAVIGATION_CONFIG: Record<string, NavigationGroup[]> = {
       label: "Sales",
       icon: DollarSign,
       items: [
+        {
+          id: 'quotation-sales',
+          label: 'Cotización',
+          icon: Calculator
+        }, 
         { 
           id: "prices-sales", 
           label: "Cotizaciones", 
