@@ -18,3 +18,9 @@ import { SalesSpread } from './entities/sales-spread.entity';
   exports: [SpreadsService, TypeOrmModule],
 })
 export class SpreadsModule {}
+
+
+
+
+
+
